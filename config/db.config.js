@@ -12,6 +12,7 @@ const database = () => {
     })
     .catch((error) => {
       logger.error(error);
+      console.log(error.message);
     });
 };
 
