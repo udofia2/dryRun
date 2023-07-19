@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import logger from "../app.js";
 import userModel from "../models/user.model.js";
+import cities from "../utils/cities.js";
+import capitalizeFirstLetter from "../utils/capitalizefunction.js";
 
 class UserController {
   async create(req, res) {
@@ -10,8 +12,42 @@ class UserController {
       lastname: req.body.lastname,
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 10),
-      event: req.body.event
+      type: req.body.type,
+      state: req.body.state,
+      city: req.body.city
     };
+    const stateToCheck = capitalizeFirstLetter(data.state);
+    const cityToCheck = capitalizeFirstLetter(data.city);
+    const stateExists = cities.some(
+      (state) => capitalizeFirstLetter(state.name) === stateToCheck
+    );
+
+    if (!stateExists) {
+      return res.status(400).send({
+        success: false,
+        message: "State does not exist"
+      });
+    }
+
+    const stateObject = cities.find(
+      (state) => capitalizeFirstLetter(state.name) === stateToCheck
+    ); // find state object
+
+    const cityExists = stateObject.cities.some((city) => {
+      const capitalizedCity = capitalizeFirstLetter(city);
+      return (
+        capitalizedCity === cityToCheck || capitalizedCity.includes(cityToCheck)
+      );
+    }); // Check if city exists in the state object also catering for cities with more than one word
+
+    if (!cityExists) {
+      return res.status(400).send({
+        success: false,
+        message: "City does not exist in that state"
+      });
+    }
+    data.city = cityToCheck;
+    data.state = stateToCheck;
 
     for (const property in data) {
       if (!data[property]) {
@@ -37,7 +73,9 @@ class UserController {
           firstname: user.firstname,
           lastname: user.lastname,
           email: user.email,
-          event: user.event
+          type: user.type,
+          city: user.city,
+          state: user.state
         }
       });
     } catch (err) {
@@ -68,7 +106,14 @@ class UserController {
         });
       }
       const token = jwt.sign(
-        { _id: user._id, email: user.email, event: user.event },
+        {
+          _id: user._id,
+          email: user.email,
+          city: user.city,
+          state: user.state,
+          type: user.type,
+          firstname: user.firstname
+        },
         process.env.TOKEN_SECRET,
         { expiresIn: "24h", algorithm: "HS512" }
       );
@@ -85,6 +130,43 @@ class UserController {
       return res.status(404).send({
         success: false,
         token: token
+      });
+    }
+  }
+  async findByLocation(req, res) {
+    if (req.user.type !== "event host") {
+      return res.status(404).send({
+        success: false,
+        message: "Only event hosts can make this request"
+      });
+    }
+    const data = {
+      state: capitalizeFirstLetter(req.body.state),
+      city: capitalizeFirstLetter(req.body.city)
+    };
+    for (const property in data) {
+      if (!data[property]) {
+        return res.status(400).send({
+          success: false,
+          message: `The ${property} field is required`
+        });
+      }
+    }
+    try {
+      const eventvendors = await userModel.find({
+        type: "event vendor",
+        state: data.state,
+        city: data.city
+      });
+      return res.status(200).send({
+        success: true,
+        data: eventvendors
+      });
+    } catch (err) {
+      logger.error(err);
+      return res.status(400).send({
+        success: false,
+        error: err.message
       });
     }
   }
