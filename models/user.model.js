@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema(
     type: {
       required: true,
       type: String,
-      enum: ["event vendor", "event host"]
+      enum: ["vendor", "host"]
     },
     state: {
       required: true,
