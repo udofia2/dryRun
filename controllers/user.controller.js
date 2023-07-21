@@ -4,6 +4,7 @@ import logger from "../app.js";
 import userModel from "../models/user.model.js";
 import cities from "../utils/cities.js";
 import capitalizeFirstLetter from "../utils/capitalizefunction.js";
+import event_types from "../utils/event.types.js";
 
 class UserController {
   async create(req, res) {
@@ -12,42 +13,16 @@ class UserController {
       lastname: req.body.lastname,
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 10),
-      type: req.body.type,
-      state: req.body.state,
-      city: req.body.city
+      type: req.body.type
     };
-    const stateToCheck = capitalizeFirstLetter(data.state);
-    const cityToCheck = capitalizeFirstLetter(data.city);
-    const stateExists = cities.some(
-      (state) => capitalizeFirstLetter(state.name) === stateToCheck
-    );
-
-    if (!stateExists) {
-      return res.status(400).send({
+    if (data.type === "vendor" && event_types.includes(req.body.event_type)) {
+      data.event_type = req.body.event_type;
+    } else {
+      return res.status(404).send({
         success: false,
-        message: "State does not exist"
+        message: "event vendor must have event type among the provided types"
       });
     }
-
-    const stateObject = cities.find(
-      (state) => capitalizeFirstLetter(state.name) === stateToCheck
-    ); // find state object
-
-    const cityExists = stateObject.cities.some((city) => {
-      const capitalizedCity = capitalizeFirstLetter(city);
-      return (
-        capitalizedCity === cityToCheck || capitalizedCity.includes(cityToCheck)
-      );
-    }); // Check if city exists in the state object also catering for cities with more than one word
-
-    if (!cityExists) {
-      return res.status(400).send({
-        success: false,
-        message: "City does not exist in that state"
-      });
-    }
-    data.city = cityToCheck;
-    data.state = stateToCheck;
 
     for (const property in data) {
       if (!data[property]) {
@@ -73,9 +48,7 @@ class UserController {
           firstname: user.firstname,
           lastname: user.lastname,
           email: user.email,
-          type: user.type,
-          city: user.city,
-          state: user.state
+          type: user.type
         }
       });
     } catch (err) {
@@ -107,12 +80,11 @@ class UserController {
       }
       const token = jwt.sign(
         {
-          _id: user._id,
+          id: user._id,
           email: user.email,
-          city: user.city,
-          state: user.state,
           type: user.type,
-          firstname: user.firstname
+          firstname: user.firstname,
+          lastname: user.lastname
         },
         process.env.TOKEN_SECRET,
         { expiresIn: "24h", algorithm: "HS512" }
@@ -122,14 +94,20 @@ class UserController {
         body: {
           message: "user logged in successfully",
           token,
-          data: user
+          data: {
+            id: user._id,
+            email: user.email,
+            type: user.type,
+            firstname: user.firstname,
+            lastname: user.lastname
+          }
         }
       });
     } catch (error) {
       logger.error(error);
       return res.status(404).send({
         success: false,
-        token: token
+        message: error.message
       });
     }
   }

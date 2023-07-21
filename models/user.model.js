@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     firstname: {
       type: String,
@@ -12,7 +12,8 @@ const userSchema = mongoose.Schema(
     },
     email: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
     password: {
       type: String,
@@ -21,15 +22,36 @@ const userSchema = mongoose.Schema(
     type: {
       required: true,
       type: String,
-      enum: ["event vendor", "event host"]
+      enum: ["vendor", "host"]
     },
-    state: {
-      required: true,
-      type: String
-    },
-    city: {
-      required: true,
-      type: String
+    event_type: {
+      type: String,
+      enum: [
+        "Event venues",
+        "Event planner",
+        "Bar services and beverages",
+        "Photography",
+        "Beauty professional",
+        "Fashion designers & Stylists",
+        "Decorators",
+        "Videographer",
+        "Clothing and accessories",
+        "Event staffs",
+        "Caterer",
+        "Baker",
+        "Printing service",
+        "Event rental",
+        "Favours & Gifts",
+        "Music & Entertainment",
+        "Lighting and AV",
+        "Officiant & Speaker",
+        "Dancing instructor",
+        "Health & Fitness",
+        "Accomodation",
+        "Transportation service",
+        "Model",
+        "Social media influencer"
+      ]
     }
   },
   { timestamps: true, versionKey: false }
@@ -41,8 +63,6 @@ userSchema.methods.generateToken = () => {
       _id: this._id,
       firstname: this.firstname,
       email: this.email,
-      city: this.city,
-      state: this.state,
       type: this.type
     },
     process.env.TOKEN_SECRET,
