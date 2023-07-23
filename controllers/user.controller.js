@@ -17,13 +17,7 @@ class UserController {
     };
     if (data.type === "vendor" && event_types.includes(req.body.event_type)) {
       data.event_type = req.body.event_type;
-    } else {
-      return res.status(404).send({
-        success: false,
-        message: "event vendor must have event type among the provided types"
-      });
     }
-
     for (const property in data) {
       if (!data[property]) {
         return res.status(400).send({
