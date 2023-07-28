@@ -5,6 +5,8 @@ import userModel from "../models/user.model.js";
 import cities from "../utils/cities.js";
 import capitalizeFirstLetter from "../utils/capitalizefunction.js";
 import event_types from "../utils/event.types.js";
+import passportConfig from "../config/passport.config.js";
+import userServices from "../services/user.services.js";
 
 class UserController {
   async create(req, res) {
@@ -105,31 +107,50 @@ class UserController {
       });
     }
   }
+  async loginGoogle(req, res) {
+    passportConfig();
+  }
+
   async findByLocation(req, res) {
-    if (req.user.type !== "event host") {
-      return res.status(404).send({
-        success: false,
-        message: "Only event hosts can make this request"
-      });
-    }
     const data = {
-      state: capitalizeFirstLetter(req.body.state),
-      city: capitalizeFirstLetter(req.body.city)
+      location: req.query.location,
+      type: "vendor",
+      event_type: req.query.event_type
     };
-    for (const property in data) {
-      if (!data[property]) {
-        return res.status(400).send({
-          success: false,
-          message: `The ${property} field is required`
-        });
+    // Function to extract state and city from the location string
+    function getLocationData(location) {
+      if (!location || location.trim() === "") {
+        return;
+      }
+      const [state, city] = location.split(",").map((item) => item.trim());
+      return {
+        state: capitalizeFirstLetter(state),
+        city: capitalizeFirstLetter(city)
+      };
+    }
+
+    const locationData = getLocationData(data.location);
+    if (locationData && locationData.state) {
+      data.state = locationData.state;
+    }
+
+    if (locationData && locationData.city) {
+      data.city = locationData.city;
+    }
+    let newData = {};
+    for (const key in data) {
+      if (data[key] !== undefined) {
+        newData[key] = data[key];
       }
     }
+
     try {
-      const eventvendors = await userModel.find({
-        type: "event vendor",
-        state: data.state,
-        city: data.city
-      });
+      const eventvendors = await userServices.find(
+        newData.type,
+        newData.event_type,
+        newData.state,
+        newData.city
+      );
       return res.status(200).send({
         success: true,
         data: eventvendors
