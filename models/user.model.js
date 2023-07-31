@@ -3,10 +3,10 @@ import jwt from "jsonwebtoken";
 const userSchema = new mongoose.Schema(
   {
     firstname: {
-      type: String,
+      type: String
     },
     lastname: {
-      type: String,
+      type: String
     },
     email: {
       type: String,
@@ -14,13 +14,25 @@ const userSchema = new mongoose.Schema(
       unique: true
     },
     password: {
-      type: String,
+      type: String
     },
     type: {
-      required: true,
       type: String,
       enum: ["vendor", "host"]
     },
+    city: {
+      type: String
+    },
+    state: {
+      type: String
+    },
+    booked_dates: [
+      {
+        date: {
+          type: Date
+        }
+      }
+    ],
     event_type: {
       type: String,
       enum: [

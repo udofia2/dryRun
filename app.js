@@ -3,11 +3,14 @@ import pino from "pino";
 import dotenv from "dotenv";
 import database from "./config/db.config.js";
 import middleware from "./middleware/middleware.js";
+import passportConfig from "./config/passport.config.js";
+
 dotenv.config();
 
 const app = express();
 middleware(app);
 const logger = pino();
+passportConfig()
 
 const start = (port) => {
   database();
