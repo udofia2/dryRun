@@ -39,6 +39,7 @@ class UserController {
       const user = await userModel.create(data);
       return res.status(200).send({
         success: true,
+        message: "Signup Successful",
         data: {
           userId: user._id,
           firstname: user.firstname,
