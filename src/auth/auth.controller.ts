@@ -1,16 +1,12 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpCode
-} from "@nestjs/common";
+import { Controller, Post, Body, Patch, HttpCode } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateAuthDto, LoginDto, UpdateAuthDto } from "./dto/auth.dto";
-import { Public } from "./decorator";
+import {
+  CreateAuthDto,
+  ForgotPasswordDto,
+  LoginDto,
+  ResetPasswordDto
+} from "./dto/auth.dto";
+import { Public, TokenExists } from "./decorator";
 
 @Controller("auth")
 export class AuthController {
@@ -29,23 +25,18 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Public()
+  @Patch("forgot-password")
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.authService.remove(+id);
+  @Public()
+  @Patch("reset-password")
+  resetPassword(
+    @Body() dto: ResetPasswordDto,
+    @TokenExists("token") token: string
+  ) {
+    return this.authService.resetPassword(token, dto);
   }
 }

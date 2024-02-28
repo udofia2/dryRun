@@ -1,12 +1,17 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
-import { CreateAuthDto, LoginDto, UpdateAuthDto } from "./dto";
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException
+} from "@nestjs/common";
+import { CreateAuthDto, ForgotPasswordDto, LoginDto } from "./dto";
 import { DatabaseService } from "src/database/database.service";
 import {
   ACCESS_TOKEN_EXPIRY,
   ACCESS_TOKEN_SECRET,
   ExhibitType,
   REFRESH_TOKEN_EXPIRY,
-  REFRESH_TOKEN_SECRET
+  REFRESH_TOKEN_SECRET,
+  RESET_TOKEN_EXPIRY
 } from "src/constants";
 import * as argon from "argon2";
 import { User } from "@prisma/client";
@@ -82,9 +87,9 @@ export class AuthService {
     };
   }
 
-  public async signToken(
+  private async signToken(
     user: User
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const payload = {
       id: user.id,
       firstname: user.firstname,
@@ -94,30 +99,77 @@ export class AuthService {
       type: user.type
     };
 
-    const accessToken = await this.jwt.signAsync(payload, {
+    const access_token = await this.jwt.signAsync(payload, {
       expiresIn: ACCESS_TOKEN_EXPIRY,
       secret: ACCESS_TOKEN_SECRET
     });
-    const refreshToken = await this.jwt.signAsync(payload, {
+    const refresh_token = await this.jwt.signAsync(payload, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
       secret: REFRESH_TOKEN_SECRET
     });
-    return { accessToken, refreshToken };
+    return { access_token, refresh_token };
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  private async signResetToken(user: User): Promise<string> {
+    const payload = {
+      id: user.id,
+      firstname: user.firstname,
+      email: user.email,
+      city: user.city,
+      state: user.state,
+      type: user.type
+    };
+
+    const token = await this.jwt.signAsync(payload, {
+      expiresIn: RESET_TOKEN_EXPIRY,
+      secret: ACCESS_TOKEN_SECRET
+    });
+    return token;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
+  async forgotPassword({
+    email,
+    redirectUrl
+  }: ForgotPasswordDto): Promise<any> {
+    email = email.toLowerCase();
+    const user = await this.db.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) throw new ForbiddenException("User not found, Please Sign Up.");
+
+    const token = await this.signResetToken(user);
+
+    const resetLink = `${redirectUrl}?token=${token}`;
+
+    //TODO: SEND EMAIL TO USER
+
+    return {
+      status: "success",
+      message: `Reset link sent to ${email}. Please use the link ${resetLink} to reset your password.`
+    };
   }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+  async resetPassword(token: string, { password }): Promise<any> {
+    let payload: any;
+    try {
+      payload = await this.jwt.verifyAsync(token, {
+        secret: ACCESS_TOKEN_SECRET
+      });
+    } catch (error) {
+      throw new UnauthorizedException("Invalid or expired token!");
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+    await this.db.user.update({
+      where: { id: payload.id },
+      data: {
+        password: await argon.hash(password)
+      }
+    });
+
+    return {
+      status: "success",
+      message: "Password reset successfully"
+    };
   }
 }
