@@ -1,12 +1,14 @@
-import { Controller, Post, Body, Patch, HttpCode } from "@nestjs/common";
+import { Controller, Post, Body, Patch, HttpCode, Get } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
   CreateAuthDto,
   ForgotPasswordDto,
   LoginDto,
-  ResetPasswordDto
-} from "./dto/auth.dto";
-import { Public, TokenExists } from "./decorator";
+  RefreshTokenDto,
+  ResetPasswordDto,
+  VerifyOtpDto
+} from "./dto";
+import { Public } from "./decorator";
 
 @Controller("auth")
 export class AuthController {
@@ -32,11 +34,20 @@ export class AuthController {
   }
 
   @Public()
+  @Get("reset-token")
+  refreshToken(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto);
+  }
+
+  @Public()
+  @Patch("verify-otp")
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto);
+  }
+
+  @Public()
   @Patch("reset-password")
-  resetPassword(
-    @Body() dto: ResetPasswordDto,
-    @TokenExists("token") token: string
-  ) {
-    return this.authService.resetPassword(token, dto);
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

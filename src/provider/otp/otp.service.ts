@@ -6,7 +6,7 @@ import {
   HttpStatus,
   BadRequestException
 } from "@nestjs/common";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import { Cache } from "cache-manager";
 import {
   TERMII_API_KEY,
@@ -17,11 +17,14 @@ import {
 @Injectable()
 export class OtpService {
   constructor(@Inject(CACHE_MANAGER) private cacheService: Cache) {}
-  API_KEY: string = TERMII_API_KEY;
-  EMAIL_ID: string = TERMII_EMAIL_ID;
-  SEND_EMAIL_URL: string = TERMII_SEND_EMAIL_URL;
+  API_KEY = TERMII_API_KEY;
+  EMAIL_ID = TERMII_EMAIL_ID;
+  SEND_EMAIL_URL = TERMII_SEND_EMAIL_URL;
 
-  private async generateOtp(): Promise<any> {
+  private async generateOtp(): Promise<{
+    otp: number;
+    otpExpiry: number;
+  }> {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
     const expiryDuration = 1000 * 60 * 10;
     const otpExpiry = Date.now() + expiryDuration;
@@ -29,7 +32,7 @@ export class OtpService {
     return { otp, otpExpiry };
   }
 
-  async sendOtpViaEmail(email_address: string): Promise<any> {
+  async sendOtpViaEmail(email_address: string): Promise<void> {
     const { otp, otpExpiry } = await this.generateOtp();
 
     const data = {
@@ -38,28 +41,22 @@ export class OtpService {
       email_configuration_id: this.EMAIL_ID,
       code: otp
     };
-    try {
-      const response: AxiosResponse = await axios.post(
-        this.SEND_EMAIL_URL,
-        data
-      );
+    await axios.post(this.SEND_EMAIL_URL, data);
 
-      await this.cacheService.set(
-        email_address + "_user_id",
-        data.email_address,
-        300
-      );
-      await this.cacheService.set(email_address + "_otp", data.code, 300);
-      await this.cacheService.set(
-        email_address + "_otpExpiry",
-        otpExpiry.toString(),
-        300
-      );
+    await this.cacheService.set(
+      email_address + "_user_id",
+      data.email_address,
+      otpExpiry
+    );
 
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    await this.cacheService.set(email_address + "_otp", data.code, otpExpiry);
+    await this.cacheService.set(
+      email_address + "_otpExpiry",
+      otpExpiry.toString(),
+      otpExpiry
+    );
+
+    return;
   }
 
   private async retrieveOtpRecord(tmp_id: string): Promise<any> {

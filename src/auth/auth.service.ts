@@ -1,9 +1,16 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   UnauthorizedException
 } from "@nestjs/common";
-import { CreateAuthDto, ForgotPasswordDto, LoginDto } from "./dto";
+import {
+  CreateAuthDto,
+  ForgotPasswordDto,
+  LoginDto,
+  RefreshTokenDto,
+  VerifyOtpDto
+} from "./dto";
 import { DatabaseService } from "src/database/database.service";
 import {
   ACCESS_TOKEN_EXPIRY,
@@ -89,6 +96,30 @@ export class AuthService {
     };
   }
 
+  async refreshToken(dto: RefreshTokenDto) {
+    // VERIFY REFRESH TOKEN
+    const payload = await this.jwt.verifyAsync(dto.refresh_token, {
+      secret: REFRESH_TOKEN_SECRET
+    });
+
+    if (!payload) {
+      throw new UnauthorizedException(
+        "Invalid or Expired refresh token, Please login"
+      );
+    }
+
+    delete payload.iat;
+    delete payload.exp;
+
+    // SIGN NEW ACCESS TOKEN
+    const access_token = await this.jwt.signAsync(payload, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+      secret: ACCESS_TOKEN_SECRET
+    });
+
+    return { status: "success", access_token };
+  }
+
   private async signToken(
     user: User
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -137,7 +168,7 @@ export class AuthService {
 
     if (!user) throw new ForbiddenException("User not found, Please Sign Up.");
 
-    //TODO: SEND EMAIL TO USER
+    // SEND EMAIL TO USER
     await this.otpService.sendOtpViaEmail(email);
 
     return {
@@ -146,18 +177,26 @@ export class AuthService {
     };
   }
 
-  async resetPassword(token: string, { password }): Promise<any> {
-    let payload: any;
-    try {
-      payload = await this.jwt.verifyAsync(token, {
-        secret: ACCESS_TOKEN_SECRET
-      });
-    } catch (error) {
-      throw new UnauthorizedException("Invalid or expired token!");
-    }
+  async verifyOtp({ email, otp }: VerifyOtpDto): Promise<any> {
+    email = email.toLowerCase();
 
+    const verificationResult = await this.otpService.verifyOtpSentViaEmail(
+      email,
+      otp
+    );
+
+    if (verificationResult.status !== "success") {
+      throw new BadRequestException(verificationResult.message);
+    }
+    return {
+      status: "success",
+      message: "OTP verified successfully"
+    };
+  }
+
+  async resetPassword({ email, password }): Promise<any> {
     await this.db.user.update({
-      where: { id: payload.id },
+      where: { email },
       data: {
         password: await argon.hash(password)
       }
