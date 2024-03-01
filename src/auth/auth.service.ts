@@ -16,12 +16,14 @@ import {
 import * as argon from "argon2";
 import { User } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
+import { OtpService } from "src/provider/otp/otp.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly jwt: JwtService
+    private readonly jwt: JwtService,
+    private readonly otpService: OtpService
   ) {}
   async register(dto: CreateAuthDto) {
     dto.email = dto.email.toLowerCase();
@@ -127,10 +129,7 @@ export class AuthService {
     return token;
   }
 
-  async forgotPassword({
-    email,
-    redirectUrl
-  }: ForgotPasswordDto): Promise<any> {
+  async forgotPassword({ email }: ForgotPasswordDto): Promise<any> {
     email = email.toLowerCase();
     const user = await this.db.user.findUnique({
       where: { email }
@@ -138,15 +137,12 @@ export class AuthService {
 
     if (!user) throw new ForbiddenException("User not found, Please Sign Up.");
 
-    const token = await this.signResetToken(user);
-
-    const resetLink = `${redirectUrl}?token=${token}`;
-
     //TODO: SEND EMAIL TO USER
+    await this.otpService.sendOtpViaEmail(email);
 
     return {
       status: "success",
-      message: `Reset link sent to ${email}. Please use the link ${resetLink} to reset your password.`
+      message: `OTP sent to ${email}`
     };
   }
 

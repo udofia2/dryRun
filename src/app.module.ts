@@ -5,11 +5,19 @@ import { AuthModule } from "./auth/auth.module";
 import { DatabaseModule } from "./database/database.module";
 import { JwtModule } from "@nestjs/jwt";
 import { ErrorModule } from "./error/error.module";
+import { CacheModule } from "@nestjs/cache-manager";
+// import * as redisStore from "cache-manager-redis-store";
 
 @Module({
   imports: [
     AuthModule,
     DatabaseModule,
+    CacheModule.register({
+      isGlobal: true
+      // store: redisStore,
+      // host: process.env.REDIS_HOST,
+      // port: process.env.REDIS_PORT
+    }),
     JwtModule.register({
       global: true
     }),
