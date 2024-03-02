@@ -15,3 +15,5 @@ export const TERMII_EMAIL_ID = process.env.TERMII_EMAIL_ID;
 export const TERMII_SEND_EMAIL_URL = process.env.TERMII_SEND_EMAIL_URL;
 
 export const ExhibitType = new Set(Object.values(EXHIBITTYPE));
+
+export const OTP_CACHE_EXPIRY = 1000 * 60 * 10;

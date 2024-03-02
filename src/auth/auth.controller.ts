@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, HttpCode, Get } from "@nestjs/common";
+import { Controller, Post, Body, Patch, HttpCode } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
   CreateAuthDto,
@@ -34,7 +34,7 @@ export class AuthController {
   }
 
   @Public()
-  @Get("reset-token")
+  @Post("refresh-token")
   refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto);
   }

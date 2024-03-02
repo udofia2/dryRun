@@ -9,6 +9,8 @@ import {
 import axios from "axios";
 import { Cache } from "cache-manager";
 import {
+  NODE_ENV,
+  OTP_CACHE_EXPIRY,
   TERMII_API_KEY,
   TERMII_EMAIL_ID,
   TERMII_SEND_EMAIL_URL
@@ -41,19 +43,27 @@ export class OtpService {
       email_configuration_id: this.EMAIL_ID,
       code: otp
     };
-    await axios.post(this.SEND_EMAIL_URL, data);
+
+    if (NODE_ENV === "production") {
+      await axios.post(this.SEND_EMAIL_URL, data);
+    } else {
+      console.log("OTP: ", otp);
+    }
 
     await this.cacheService.set(
       email_address + "_user_id",
       data.email_address,
-      otpExpiry
+      OTP_CACHE_EXPIRY
     );
-
-    await this.cacheService.set(email_address + "_otp", data.code, otpExpiry);
+    await this.cacheService.set(
+      email_address + "_otp",
+      data.code,
+      OTP_CACHE_EXPIRY
+    );
     await this.cacheService.set(
       email_address + "_otpExpiry",
       otpExpiry.toString(),
-      otpExpiry
+      OTP_CACHE_EXPIRY
     );
 
     return;
