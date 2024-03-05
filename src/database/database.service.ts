@@ -9,7 +9,7 @@ export class DatabaseService extends PrismaClient {
     super({
       datasources: {
         db: {
-          url: "postgresql://postgres:password@localhost:5435/eventdb?schema=public"
+          url: DATABASE_URL
         }
       }
     });

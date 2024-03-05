@@ -18,7 +18,7 @@ export class ErrorService implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status: number | undefined;
-    let message = "Internal server error";
+    let message = "Internal server error!";
     let stackTrace: string | undefined;
 
     if (exception instanceof HttpException) {
@@ -45,6 +45,8 @@ export class ErrorService implements ExceptionFilter {
         stackTrace
       });
     } else if (NODE_ENV === "production") {
+      console.log(exception);
+      status = status || 500;
       message = "Something went wrong!";
       response.status(status).json({
         statusCode: status,
