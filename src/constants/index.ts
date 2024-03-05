@@ -1,7 +1,6 @@
 import { EXHIBITTYPE } from "@prisma/client";
 
 export const DATABASE_URL = process.env.DATABASE_URL;
-console.log(`DATABASE_URL: ${DATABASE_URL}`);
 
 export const PORT = process.env.PORT;
 export const NODE_ENV = process.env.ENV;
