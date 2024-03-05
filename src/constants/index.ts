@@ -4,7 +4,7 @@ export const DATABASE_URL = process.env.DATABASE_URL;
 console.log(`DATABASE_URL: ${DATABASE_URL}`);
 
 export const PORT = process.env.PORT;
-export const NODE_ENV = process.env.NODE_ENV;
+export const NODE_ENV = process.env.ENV;
 export const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY;
 export const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY;
 export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
