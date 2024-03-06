@@ -46,12 +46,17 @@ export class ErrorService implements ExceptionFilter {
       });
     } else if (NODE_ENV === "production") {
       console.log(exception);
-      status = status || 500;
-      message = "Something went wrong!";
-      response.status(status).json({
-        statusCode: status,
-        message
-      });
+      if (!status) {
+        return response.status(500).json({
+          statusCode: 500,
+          message: "Something went wrong!"
+        });
+      } else {
+        return response.status(status).json({
+          statusCode: status,
+          message
+        });
+      }
     }
   }
 }

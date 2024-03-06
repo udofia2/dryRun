@@ -46,8 +46,6 @@ export class OtpService {
 
     if (NODE_ENV === "production") {
       await axios.post(this.SEND_EMAIL_URL, data);
-    } else {
-      console.log("OTP: ", otp);
     }
 
     await this.cacheService.set(

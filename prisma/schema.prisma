@@ -25,6 +25,7 @@ model User {
   state   String?
   booked_dates DateTime[]
   exhibit EXHIBITTYPE?
+  events Event[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -61,4 +62,21 @@ enum EXHIBITTYPE {
   transportation_service
   model
   social_media_influencer
+}
+
+model Event {
+  id       Int   @id @default(autoincrement())
+  name     String
+  description String
+  date     DateTime
+  location String
+  city    String
+  state   String
+
+
+  exhibitor_id  Int
+  exhibitor User @relation(fields: [exhibitor_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
