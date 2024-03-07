@@ -6,6 +6,7 @@ import { ErrorService } from "./error/error.service";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   app.useGlobalPipes(new AppValidationPipe({ whitelist: true }));
   app.setGlobalPrefix("api");
   app.useGlobalFilters(new ErrorService());
