@@ -2,11 +2,12 @@ version: "3.7"
 
 services:
   # api:
-  #   image: maestro-api
-  #   container_name: event-api
+  #   container_name: events-be
   #   build: .
   #   ports:
-  #     - 3500:3500
+  #     - 4000:4000
+  #   volumes:
+  #     - .:/events-backend
   #   env_file: .env
   #   depends_on:
   #     - db
@@ -15,7 +16,7 @@ services:
     image: postgres:11.5-alpine
     container_name: event-db
     ports:
-      - 5435:5432
+      - 5432:5432
     env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
