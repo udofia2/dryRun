@@ -17,8 +17,7 @@ import {
   ACCESS_TOKEN_SECRET,
   ExhibitType,
   REFRESH_TOKEN_EXPIRY,
-  REFRESH_TOKEN_SECRET,
-  RESET_TOKEN_EXPIRY
+  REFRESH_TOKEN_SECRET
 } from "src/constants";
 import * as argon from "argon2";
 import { User } from "@prisma/client";
@@ -34,7 +33,6 @@ export class AuthService {
   ) {}
   async register(dto: CreateAuthDto) {
     dto.email = dto.email.toLowerCase();
-    console.log(dto);
     // FIND USER
     const userExists = await this.db.user.findUnique({
       where: { email: dto.email }
@@ -81,7 +79,7 @@ export class AuthService {
     // VERIFY PASSWORD
     const validPassword = await argon.verify(user.password, dto.password);
     if (!validPassword) {
-      throw new ForbiddenException("Invalid email or password");
+      throw new ForbiddenException("Invalid email or password!");
     }
 
     delete user.password;
@@ -142,23 +140,6 @@ export class AuthService {
       secret: REFRESH_TOKEN_SECRET
     });
     return { access_token, refresh_token };
-  }
-
-  private async signResetToken(user: User): Promise<string> {
-    const payload = {
-      id: user.id,
-      firstname: user.firstname,
-      email: user.email,
-      city: user.city,
-      state: user.state,
-      type: user.type
-    };
-
-    const token = await this.jwt.signAsync(payload, {
-      expiresIn: RESET_TOKEN_EXPIRY,
-      secret: ACCESS_TOKEN_SECRET
-    });
-    return token;
   }
 
   async forgotPassword({ email }: ForgotPasswordDto): Promise<any> {
