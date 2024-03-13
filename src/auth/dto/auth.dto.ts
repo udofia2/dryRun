@@ -30,7 +30,7 @@ export class CreateAuthDto {
   @IsNotEmpty()
   type: USERTYPE;
 
-  @IsString()
+  @UserTypeMustBe("exhibitor")
   exhibit: EXHIBITTYPE;
 }
 
@@ -115,6 +115,41 @@ function MatchesProperty(
         defaultMessage(args: ValidationArguments) {
           const [relatedPropertyName] = args.constraints;
           return `${propertyName} must match ${relatedPropertyName}`;
+        }
+      }
+    });
+  };
+}
+
+/**
+ * USER TYPE MUST BE
+ * @param expectedType
+ * @param validationOptions
+ * @returns
+ */
+export function UserTypeMustBe(
+  expectedType: string,
+  validationOptions?: ValidationOptions
+) {
+  return function (object: CreateAuthDto, propertyName: string) {
+    registerDecorator({
+      name: "userTypeMustBe",
+      target: object.constructor,
+      propertyName: propertyName,
+      constraints: [expectedType],
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const [expectedType] = args.constraints;
+          const userDto = args.object as CreateAuthDto;
+          if (userDto.type !== expectedType && value !== undefined) {
+            return false;
+          }
+          return true;
+        },
+        defaultMessage(args: ValidationArguments) {
+          const [expectedType] = args.constraints;
+          return `Only ${expectedType}s can have ${args.property} field`;
         }
       }
     });
