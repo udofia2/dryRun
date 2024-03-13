@@ -1,18 +1,13 @@
 FROM node:alpine
 
-# Set working directory
-WORKDIR /app
+WORKDIR /events-backend
 
-# Copy package.json to working directory
-COPY package.json .
+COPY tsconfig*.json ./
 
-# Install dependencies
+COPY package.json yarn.lock ./
+
 RUN yarn install
 
 COPY . .
 
-# Expose port 3000
-EXPOSE 3500
-
-# Start the app
-CMD ["yarn", "start"]
+ENTRYPOINT ["/events-backend/dev.entrypoint.sh"]
