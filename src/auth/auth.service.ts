@@ -34,6 +34,7 @@ export class AuthService {
   ) {}
   async register(dto: CreateAuthDto) {
     dto.email = dto.email.toLowerCase();
+    console.log(dto);
     // FIND USER
     const userExists = await this.db.user.findUnique({
       where: { email: dto.email }
