@@ -35,7 +35,7 @@ model User {
 
 model Prospect {
   id          String       @id @default(uuid())
-  date        DateTime
+  date        DateTime @default(now())
   client_name String
   source      SOURCETYPE
   status      STATUSTYPE
