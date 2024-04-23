@@ -1,9 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ProspectsService } from './prospects.service';
-import { CreateProspectDto } from './dto/create-prospect.dto';
-import { UpdateProspectDto } from './dto/update-prospect.dto';
+import { Controller, Get, Post, Body, Param, Delete } from "@nestjs/common";
+import { ProspectsService } from "./prospects.service";
+import { CreateProspectDto } from "./dto/prospects.dto";
 
-@Controller('prospects')
+@Controller("prospects")
 export class ProspectsController {
   constructor(private readonly prospectsService: ProspectsService) {}
 
@@ -17,18 +16,13 @@ export class ProspectsController {
     return this.prospectsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.prospectsService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProspectDto: UpdateProspectDto) {
-    return this.prospectsService.update(+id, updateProspectDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  remove(@Param("id") id: string) {
     return this.prospectsService.remove(+id);
   }
 }

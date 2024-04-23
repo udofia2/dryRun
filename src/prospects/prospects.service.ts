@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProspectDto } from './dto/create-prospect.dto';
-import { UpdateProspectDto } from './dto/update-prospect.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateProspectDto } from "./dto/prospects.dto";
+import { DatabaseService } from "src/database/database.service";
 
 @Injectable()
 export class ProspectsService {
-  create(createProspectDto: CreateProspectDto) {
-    return 'This action adds a new prospect';
+  constructor(private db: DatabaseService) {}
+
+  async create(dto: CreateProspectDto) {
+    return "This action adds a new prospect";
   }
 
   findAll() {
@@ -14,10 +16,6 @@ export class ProspectsService {
 
   findOne(id: number) {
     return `This action returns a #${id} prospect`;
-  }
-
-  update(id: number, updateProspectDto: UpdateProspectDto) {
-    return `This action updates a #${id} prospect`;
   }
 
   remove(id: number) {

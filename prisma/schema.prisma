@@ -41,6 +41,7 @@ model Prospect {
   status      STATUSTYPE
 
   client     Client?
+  event     Event?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -64,15 +65,22 @@ model Client {
 
 model Event {
   id          Int      @id @default(autoincrement())
-  event_name        String @default("undecided")
-  event_date       DateTime
-  event_type       String
+  name        String @default("undecided")
+  date       DateTime
+  type       String
+
+  description String?
+  city        String?
+  state       String?
 
   location_type   LOCATIONTYPE
   location_address String @default("undecided")
 
   exhibitor_id Int
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+
+  prospect_id String  @unique
+  prospect    Prospect @relation(fields: [prospect_id], references: [id])
 
   specifications Specification[]
 
