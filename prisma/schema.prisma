@@ -37,8 +37,8 @@ model Prospect {
   id          String       @id @default(uuid())
   date        DateTime @default(now())
   client_name String
-  source      SOURCETYPE
-  status      STATUSTYPE
+  source      SOURCETYPE @default(Offline)
+  status      STATUSTYPE @default(Pending)
 
   client     Client?
   event     Event?
@@ -64,7 +64,7 @@ model Client {
 }
 
 model Event {
-  id          Int      @id @default(autoincrement())
+  id String @id @default(uuid())
   name        String @default("undecided")
   date       DateTime
   type       String
@@ -82,7 +82,7 @@ model Event {
   prospect_id String  @unique
   prospect    Prospect @relation(fields: [prospect_id], references: [id])
 
-  specifications Specification[]
+  specification Specification?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -95,7 +95,8 @@ model Specification {
   provisions Provision[]
   activities Activity[]
 
-  events Event[]
+  event_id String @unique
+  event    Event @relation(fields: [event_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -172,6 +173,7 @@ enum EXHIBITTYPE {
 enum CLIENTTYPE {
   Individual
   Company
+  Organization
 }
 
 enum STATUSTYPE {
@@ -191,7 +193,7 @@ enum SOURCETYPE {
 }
 
 enum LOCATIONTYPE {
-  In_person
+  Physical
   Virtual
   Hybrid
 }

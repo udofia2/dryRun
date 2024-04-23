@@ -56,7 +56,7 @@ class Specification {
   activities: Activity[];
 
   @IsNotEmpty()
-  privisions: Provision[];
+  provisions: Provision[];
 }
 
 class Client {
@@ -91,6 +91,12 @@ class Event {
 
   @IsString()
   state: string;
+
+  @IsString()
+  location_type: string;
+
+  @IsString()
+  location_address: string;
 }
 
 export class CreateProspectDto {
