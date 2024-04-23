@@ -33,6 +33,103 @@ model User {
   @@index([email])
 }
 
+model Prospect {
+  id          String       @id @default(uuid())
+  date        DateTime
+  client_name String
+  source      SOURCETYPE
+  status      STATUSTYPE
+
+  client     Client?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([id])
+}
+
+model Client {
+  id           String     @id @default(uuid())
+  email        String
+  type         CLIENTTYPE
+  name         String
+  phone_number String
+
+  prospect_id String   @unique
+  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  event_name        String @default("undecided")
+  event_date       DateTime
+  event_type       String
+
+  location_type   LOCATIONTYPE
+  location_address String @default("undecided")
+
+  exhibitor_id Int
+  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+
+  specifications Specification[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Specification {
+  id String @id @default(uuid())
+  theme String
+
+  provisions Provision[]
+  activities Activity[]
+
+  events Event[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Provision {
+  id String @id @default(uuid())
+  provision String
+  description String
+
+  exhibitor_name String?
+  start_date DateTime
+  end_date DateTime
+
+  amount Float
+
+  specification_id String
+  specification    Specification @relation(fields: [specification_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Activity {
+  id String @id @default(uuid())
+  title String
+  description String
+
+  exhibitor_name String?
+
+  start_date DateTime
+  end_date DateTime
+
+  amount Float
+
+  specification_id String
+  specification    Specification @relation(fields: [specification_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 enum USERTYPE {
   host
   exhibitor
@@ -64,71 +161,9 @@ enum EXHIBITTYPE {
   social_media_influencer
 }
 
-model Prospect {
-  id          String       @id @default(uuid())
-  date        DateTime
-  client_name String
-  source      SOURCETYPE
-  status      STATUSTYPE
-
-  client_id String
-  client     Client?
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([id])
-}
-
-model Client {
-  id           String     @id @default(uuid())
-  email        String
-  type         CLIENTTYPE
-  name         String
-  phone_number String
-
-  prospect_id String   @unique
-  prospect    Prospect @relation(fields: [prospect_id], references: [id])
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Event {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  date        DateTime
-  location    String
-  city        String
-  state       String
-
-  exhibitor_id Int
-  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
-
-  specifications Specification[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Specification {
-  id String @id @default(uuid())
-  theme String
-  provisions String[]
-  activities String[]
-
-  events Event[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-
 enum CLIENTTYPE {
   Individual
   Company
-  Organization
 }
 
 enum STATUSTYPE {
@@ -145,4 +180,10 @@ enum PROSPECTTYPE {
 enum SOURCETYPE {
   Offline
   Online
+}
+
+enum LOCATIONTYPE {
+  In_person
+  Virtual
+  Hybrid
 }
