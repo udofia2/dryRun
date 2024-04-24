@@ -27,6 +27,8 @@ model User {
   exhibit      EXHIBITTYPE?
   events       Event[]
 
+  prospects Prospect[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -42,6 +44,9 @@ model Prospect {
 
   client     Client?
   event     Event?
+
+  exhibitor_id String
+  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

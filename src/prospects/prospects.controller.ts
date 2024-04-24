@@ -4,9 +4,10 @@ import {
   Post,
   Body,
   Param,
-  Delete,
   UseGuards,
-  Req
+  Req,
+  Query,
+  Patch
 } from "@nestjs/common";
 import { ProspectsService } from "./prospects.service";
 import { CreateProspectDto } from "./dto/prospects.dto";
@@ -23,17 +24,22 @@ export class ProspectsController {
   }
 
   @Get()
-  findAll() {
-    return this.prospectsService.findAll();
+  filter(@Query("source") source: string) {
+    return this.prospectsService.filter(source);
+  }
+
+  @Get("all")
+  findAll(@Req() req: Request) {
+    return this.prospectsService.findAll(req);
   }
 
   @Get(":id")
   findOne(@Param("id") id: string) {
-    return this.prospectsService.findOne(+id);
+    return this.prospectsService.findOne(id);
   }
 
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.prospectsService.remove(+id);
+  @Patch()
+  update(@Query("id") id: string, @Body("status") status: string) {
+    return this.prospectsService.update(id, status);
   }
 }

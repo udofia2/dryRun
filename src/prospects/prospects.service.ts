@@ -1,7 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { DatabaseService } from "src/database/database.service";
-import { CLIENTTYPE, LOCATIONTYPE } from "@prisma/client";
+import {
+  CLIENTTYPE,
+  LOCATIONTYPE,
+  SOURCETYPE,
+  STATUSTYPE
+} from "@prisma/client";
 
 @Injectable()
 export class ProspectsService {
@@ -9,10 +14,14 @@ export class ProspectsService {
 
   async create(dto: CreateProspectDto, req: any) {
     return this.db.$transaction(async (tx) => {
-      const { client_name } = dto;
+      const { client_name, source } = dto;
       // CREATE PROSPECT
       let prospect = await tx.prospect.create({
-        data: { client_name }
+        data: {
+          client_name,
+          source: SOURCETYPE[source],
+          exhibitor_id: req.user.id
+        }
       });
 
       // CREATE CLIENT
@@ -96,15 +105,64 @@ export class ProspectsService {
     });
   }
 
-  findAll() {
-    return `This action returns all prospects`;
+  async findAll(req: any) {
+    const prospects = await this.db.prospect.findMany({
+      where: { exhibitor_id: req.user.id }
+    });
+    return {
+      success: true,
+      message: "Prospects retrieved successfully",
+      data: prospects
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} prospect`;
+  async findOne(id: string) {
+    const prospect = await this.db.prospect.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        event: {
+          include: {
+            specification: {
+              include: {
+                activities: true,
+                provisions: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return {
+      success: true,
+      message: "Prospect retrieved successfully",
+      data: prospect
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} prospect`;
+  async filter(source: string) {
+    const prospects = await this.db.prospect.findMany({
+      where: { source: SOURCETYPE[source] }
+    });
+
+    return {
+      success: true,
+      message: "Prospects retrieved successfully",
+      data: prospects
+    };
+  }
+
+  async update(id: string, status: string) {
+    const prospect = await this.db.prospect.update({
+      where: { id },
+      data: { status: STATUSTYPE[status] }
+    });
+
+    return {
+      success: true,
+      message: "Prospect updated successfully",
+      data: prospect
+    };
   }
 }
