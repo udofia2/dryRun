@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Patch, HttpCode } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  HttpCode,
+  UseGuards
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
   CreateAuthDto,
@@ -9,7 +16,9 @@ import {
   VerifyOtpDto
 } from "./dto";
 import { Public } from "./decorator";
+import { AuthGuard } from "./guard";
 
+@UseGuards(AuthGuard)
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

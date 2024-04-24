@@ -7,7 +7,7 @@ import { CLIENTTYPE, LOCATIONTYPE } from "@prisma/client";
 export class ProspectsService {
   constructor(private db: DatabaseService) {}
 
-  async create(dto: CreateProspectDto) {
+  async create(dto: CreateProspectDto, req: any) {
     return this.db.$transaction(async (tx) => {
       const { client_name } = dto;
       // CREATE PROSPECT
@@ -37,8 +37,7 @@ export class ProspectsService {
           state: dto.event.state ?? undefined,
           location_type: LOCATIONTYPE[dto.event.location_type],
           location_address: dto.event.location_address ?? undefined,
-          // TODO: CHANGE EXHIBITOR ID TYPE TO STRING
-          exhibitor_id: 1,
+          exhibitor_id: req.user.id,
           prospect_id: prospect.id
         }
       });
@@ -68,8 +67,6 @@ export class ProspectsService {
           specification_id: specification.id
         };
       });
-
-      console.log(provisions, activities);
 
       await tx.provision.createMany({ data: provisions });
       await tx.activity.createMany({ data: activities });

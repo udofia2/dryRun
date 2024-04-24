@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
+  id           String          @id @default(uuid())
   email        String       @unique
   firstname    String
   lastname     String
@@ -76,7 +76,7 @@ model Event {
   location_type   LOCATIONTYPE
   location_address String @default("undecided")
 
-  exhibitor_id Int
+  exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
 
   prospect_id String  @unique
