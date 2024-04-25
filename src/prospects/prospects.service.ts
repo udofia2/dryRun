@@ -1,12 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { DatabaseService } from "src/database/database.service";
-import { LOCATIONTYPE, SOURCETYPE, STATUSTYPE } from "@prisma/client";
-
-enum CLIENTTYPE {
-  "individual" = "Individual",
-  "company/organization" = "Company/Organization"
-}
+import { SOURCETYPE, STATUSTYPE } from "@prisma/client";
+import { CLIENTTYPE, LOCATIONTYPE } from "src/constants";
 
 @Injectable()
 export class ProspectsService {
@@ -44,7 +40,10 @@ export class ProspectsService {
           description: dto.event.description ?? undefined,
           city: dto.event.city ?? undefined,
           state: dto.event.state ?? undefined,
-          location_type: LOCATIONTYPE[dto.event.location_type],
+          location_type:
+            LOCATIONTYPE[
+              dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
+            ],
           location_address: dto.event.location_address ?? undefined,
           exhibitor_id: req.user.id,
           prospect_id: prospect.id

@@ -78,7 +78,7 @@ model Event {
   city        String?
   state       String?
 
-  location_type   LOCATIONTYPE
+  location_type   String
   location_address String @default("undecided")
 
   exhibitor_id String
@@ -189,10 +189,4 @@ enum PROSPECTTYPE {
 enum SOURCETYPE {
   Offline
   Online
-}
-
-enum LOCATIONTYPE {
-  Physical
-  Virtual
-  Hybrid
 }
