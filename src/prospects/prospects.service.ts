@@ -16,6 +16,8 @@ export class ProspectsService {
     return this.db.$transaction(async (tx) => {
       const { client_name, source } = dto;
       // CREATE PROSPECT
+      console.log(req.user.id);
+
       let prospect = await tx.prospect.create({
         data: {
           client_name,
