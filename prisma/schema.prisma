@@ -39,8 +39,8 @@ model Prospect {
   id          String       @id @default(uuid())
   date        DateTime @default(now())
   client_name String
-  source      SOURCETYPE @default(Offline)
-  status      STATUSTYPE @default(Pending)
+  source      String
+  status      String @default("Pending")
 
   client     Client?
   event     Event?
@@ -175,18 +175,7 @@ enum EXHIBITTYPE {
   social_media_influencer
 }
 
-enum STATUSTYPE {
-  Pending
-  Converted
-  Rejected
-}
-
 enum PROSPECTTYPE {
   host
   exhibitor
-}
-
-enum SOURCETYPE {
-  Offline
-  Online
 }

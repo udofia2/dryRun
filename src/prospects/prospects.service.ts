@@ -1,8 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { DatabaseService } from "src/database/database.service";
-import { SOURCETYPE, STATUSTYPE } from "@prisma/client";
-import { CLIENTTYPE, LOCATIONTYPE } from "src/constants";
+import {
+  CLIENTTYPE,
+  LOCATIONTYPE,
+  SOURCETYPE,
+  STATUSTYPE
+} from "src/constants";
 
 @Injectable()
 export class ProspectsService {
@@ -15,7 +19,7 @@ export class ProspectsService {
       let prospect = await tx.prospect.create({
         data: {
           client_name,
-          source: SOURCETYPE[source],
+          source: SOURCETYPE[source.toLowerCase()],
           exhibitor_id: req.user.id
         }
       });
@@ -155,7 +159,7 @@ export class ProspectsService {
   async update(id: string, status: string) {
     const prospect = await this.db.prospect.update({
       where: { id },
-      data: { status: STATUSTYPE[status] }
+      data: { status: STATUSTYPE[status.toLowerCase()] }
     });
 
     return {

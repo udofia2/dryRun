@@ -12,3 +12,14 @@ export enum LOCATIONTYPE {
   "virtual" = "Virtual",
   "hybrid" = "Hybrid"
 }
+
+export enum SOURCETYPE {
+  "offline" = "Offline",
+  "online" = "Online"
+}
+
+export enum STATUSTYPE {
+  "pending" = "Pending",
+  "converted" = "Converted",
+  "rejected" = "Rejected"
+}
