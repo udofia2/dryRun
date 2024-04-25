@@ -154,7 +154,7 @@ export class ProspectsService {
 
   async filter(source: string) {
     const prospects = await this.db.prospect.findMany({
-      where: { source: SOURCETYPE[source] }
+      where: { source: SOURCETYPE[source.toLowerCase()] }
     });
 
     return {
