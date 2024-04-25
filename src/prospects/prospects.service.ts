@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { DatabaseService } from "src/database/database.service";
-import {
-  CLIENTTYPE,
-  LOCATIONTYPE,
-  SOURCETYPE,
-  STATUSTYPE
-} from "@prisma/client";
+import { LOCATIONTYPE, SOURCETYPE, STATUSTYPE } from "@prisma/client";
+
+enum CLIENTTYPE {
+  "individual" = "Individual",
+  "company/organization" = "Company/Organization"
+}
 
 @Injectable()
 export class ProspectsService {
@@ -28,7 +28,7 @@ export class ProspectsService {
       await tx.client.create({
         data: {
           name: dto.client.name,
-          type: CLIENTTYPE[dto.client.type],
+          type: CLIENTTYPE[dto.client.type.toLowerCase()],
           email: dto.client.email,
           prospect_id: prospect.id,
           phone_number: dto.client.phone_number

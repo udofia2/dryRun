@@ -57,7 +57,7 @@ model Prospect {
 model Client {
   id           String     @id @default(uuid())
   email        String
-  type         CLIENTTYPE
+  type         String
   name         String
   phone_number String
 
@@ -173,12 +173,6 @@ enum EXHIBITTYPE {
   transportation_service
   model
   social_media_influencer
-}
-
-enum CLIENTTYPE {
-  Individual
-  Company
-  Organization
 }
 
 enum STATUSTYPE {
