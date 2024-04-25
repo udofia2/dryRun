@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -14,24 +14,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id       Int   @id @default(autoincrement())
-  email    String   @unique
-  firstname     String
+  id           String          @id @default(uuid())
+  email        String       @unique
+  firstname    String
   lastname     String
-  password String
-  type     USERTYPE?
-  city    String?
-  state   String?
+  password     String
+  type         USERTYPE?
+  city         String?
+  state        String?
   booked_dates DateTime[]
-  exhibit EXHIBITTYPE?
-  events Event[]
+  exhibit      EXHIBITTYPE?
+  events       Event[]
+
+  prospects Prospect[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@index([email])
+}
+
+model Prospect {
+  id          String       @id @default(uuid())
+  date        DateTime @default(now())
+  client_name String
+  source      String
+  status      String @default("Pending")
+
+  client     Client?
+  event     Event?
+
+  exhibitor_id String
+  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([id])
+}
+
+model Client {
+  id           String     @id @default(uuid())
+  email        String
+  type         String
+  name         String
+  phone_number String
+
+  prospect_id String   @unique
+  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Event {
+  id String @id @default(uuid())
+  name        String @default("undecided")
+  date       DateTime
+  type       String
+
+  description String?
+  city        String?
+  state       String?
+
+  location_type   String
+  location_address String @default("undecided")
+
+  exhibitor_id String
+  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+
+  prospect_id String  @unique
+  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+
+  specification Specification?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Specification {
+  id String @id @default(uuid())
+  theme String
+
+  provisions Provision[]
+  activities Activity[]
+
+  event_id String @unique
+  event    Event @relation(fields: [event_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Provision {
+  id String @id @default(uuid())
+  provision String
+  description String
+
+  exhibitor_name String?
+  start_date DateTime
+  end_date DateTime
+
+  amount Float
+
+  specification_id String
+  specification    Specification @relation(fields: [specification_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Activity {
+  id String @id @default(uuid())
+  title String
+  description String
+
+  exhibitor_name String?
+
+  start_date DateTime
+  end_date DateTime
+
+  amount Float
+
+  specification_id String
+  specification    Specification @relation(fields: [specification_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 enum USERTYPE {
@@ -65,19 +175,7 @@ enum EXHIBITTYPE {
   social_media_influencer
 }
 
-model Event {
-  id       Int   @id @default(autoincrement())
-  name     String
-  description String
-  date     DateTime
-  location String
-  city    String
-  state   String
-
-
-  exhibitor_id  Int
-  exhibitor User @relation(fields: [exhibitor_id], references: [id])
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+enum PROSPECTTYPE {
+  host
+  exhibitor
 }
