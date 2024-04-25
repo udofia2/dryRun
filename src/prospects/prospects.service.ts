@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { DatabaseService } from "src/database/database.service";
 import {
@@ -119,7 +119,7 @@ export class ProspectsService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, req: any) {
     const prospect = await this.db.prospect.findUnique({
       where: { id },
       include: {
@@ -136,6 +136,12 @@ export class ProspectsService {
         }
       }
     });
+
+    if (prospect) {
+      if (prospect.exhibitor_id !== req.user.id) {
+        throw new UnauthorizedException("Unauthorized access to prospect");
+      }
+    }
 
     return {
       success: true,
@@ -156,11 +162,17 @@ export class ProspectsService {
     };
   }
 
-  async update(id: string, status: string) {
+  async update(id: string, status: string, req: any) {
     const prospect = await this.db.prospect.update({
       where: { id },
       data: { status: STATUSTYPE[status.toLowerCase()] }
     });
+
+    if (prospect) {
+      if (prospect.exhibitor_id !== req.user.id) {
+        throw new UnauthorizedException("Unauthorized access to prospect");
+      }
+    }
 
     return {
       success: true,

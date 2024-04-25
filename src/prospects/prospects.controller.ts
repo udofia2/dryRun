@@ -34,12 +34,16 @@ export class ProspectsController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.prospectsService.findOne(id);
+  findOne(@Param("id") id: string, @Req() req: Request) {
+    return this.prospectsService.findOne(id, req);
   }
 
   @Patch()
-  update(@Query("id") id: string, @Body("status") status: string) {
-    return this.prospectsService.update(id, status);
+  update(
+    @Query("id") id: string,
+    @Body("status") status: string,
+    @Req() req: Request
+  ) {
+    return this.prospectsService.update(id, status, req);
   }
 }

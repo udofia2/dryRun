@@ -6,7 +6,7 @@ import { DatabaseModule } from "./database/database.module";
 import { JwtModule } from "@nestjs/jwt";
 import { ErrorModule } from "./error/error.module";
 import { CacheModule } from "@nestjs/cache-manager";
-import { ProspectsModule } from './prospects/prospects.module';
+import { ProspectsModule } from "./prospects/prospects.module";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
