@@ -28,6 +28,7 @@ model User {
   events       Event[]
 
   prospects Prospect[]
+  offers    Offer[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -54,6 +55,26 @@ model Prospect {
   @@index([id])
 }
 
+model Offer {
+  id String @id @default(uuid())
+  date DateTime @default(now())
+  location String
+  status String @default("Pending")
+
+  specification    Specification?
+
+  client_id String @unique
+  client    Client @relation(fields: [client_id], references: [id])
+
+  exhibitor_id String
+  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([id])
+}
+
 model Client {
   id           String     @id @default(uuid())
   email        String
@@ -64,8 +85,26 @@ model Client {
   prospect_id String   @unique
   prospect    Prospect @relation(fields: [prospect_id], references: [id])
 
+  offer    Offer[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Payment {
+  id String @id @default(uuid())
+  
+  structure PAYMENTSTRUCTURE
+  initial_deposit Boolean @default(false)
+  initial_deposit_amount Float?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum PAYMENTSTRUCTURE {
+  lump_sum
+  per_specification
 }
 
 model Event {
@@ -102,6 +141,9 @@ model Specification {
 
   event_id String @unique
   event    Event @relation(fields: [event_id], references: [id])
+
+  offer_id String @unique
+  offer    Offer @relation(fields: [offer_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
