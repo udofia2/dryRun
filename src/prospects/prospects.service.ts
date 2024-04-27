@@ -14,26 +14,25 @@ export class ProspectsService {
 
   async create(dto: CreateProspectDto, req: any) {
     return this.db.$transaction(async (tx) => {
-      const { client_name, source } = dto;
+      const { source } = dto;
       // CREATE PROSPECT
       console.log(req.user.id);
 
       let prospect = await tx.prospect.create({
         data: {
-          client_name,
           source: SOURCETYPE[source.toLowerCase()],
-          exhibitor_id: req.user.id
-        }
-      });
-
-      // CREATE CLIENT
-      await tx.client.create({
-        data: {
-          name: dto.client.name,
-          type: CLIENTTYPE[dto.client.type.toLowerCase()],
-          email: dto.client.email,
-          prospect_id: prospect.id,
-          phone_number: dto.client.phone_number
+          exhibitor: { connect: { id: req.user.id } },
+          client: {
+            connectOrCreate: {
+              where: { email: dto.client.email },
+              create: {
+                name: dto.client.name,
+                type: CLIENTTYPE[dto.client.type.toLowerCase()],
+                email: dto.client.email,
+                phone_number: dto.client.phone_number
+              }
+            }
+          }
         }
       });
 
