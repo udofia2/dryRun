@@ -51,6 +51,7 @@ export class ProspectsService {
             ],
           location_address: dto.event.location_address ?? undefined,
           exhibitor_id: req.user.id,
+          client_email: dto.client.email,
           prospect_id: prospect.id
         }
       });
@@ -59,7 +60,7 @@ export class ProspectsService {
       const specification = await tx.specification.create({
         data: {
           theme: dto.specification.theme,
-          event_id: event.id
+          event: { connect: { id: event.id } }
         }
       });
 

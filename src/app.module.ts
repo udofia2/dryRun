@@ -7,6 +7,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { ErrorModule } from "./error/error.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { ProspectsModule } from "./prospects/prospects.module";
+import { OfferModule } from './offer/offer.module';
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -23,7 +24,8 @@ import { ProspectsModule } from "./prospects/prospects.module";
       global: true
     }),
     ErrorModule,
-    ProspectsModule
+    ProspectsModule,
+    OfferModule
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "PAYMENTSTRUCTURE" AS ENUM ('lump_sum', 'per_specification');
+
+-- CreateEnum
 CREATE TYPE "USERTYPE" AS ENUM ('host', 'exhibitor');
 
 -- CreateEnum
@@ -29,14 +32,30 @@ CREATE TABLE "User" (
 CREATE TABLE "Prospect" (
     "id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "client_name" TEXT NOT NULL,
     "source" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'Pending',
+    "client_email" TEXT NOT NULL,
     "exhibitor_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Prospect_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Offer" (
+    "id" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "location" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'Pending',
+    "client_email" TEXT NOT NULL,
+    "prospect_id" TEXT NOT NULL,
+    "event_id" TEXT NOT NULL,
+    "exhibitor_id" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Offer_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -46,11 +65,22 @@ CREATE TABLE "Client" (
     "type" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "phone_number" TEXT NOT NULL,
-    "prospect_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Client_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" TEXT NOT NULL,
+    "structure" "PAYMENTSTRUCTURE" NOT NULL,
+    "initial_deposit" BOOLEAN NOT NULL DEFAULT false,
+    "initial_deposit_amount" DOUBLE PRECISION,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -77,6 +107,7 @@ CREATE TABLE "Specification" (
     "id" TEXT NOT NULL,
     "theme" TEXT NOT NULL,
     "event_id" TEXT NOT NULL,
+    "offer_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -125,7 +156,22 @@ CREATE INDEX "User_email_idx" ON "User"("email");
 CREATE INDEX "Prospect_id_idx" ON "Prospect"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Client_prospect_id_key" ON "Client"("prospect_id");
+CREATE UNIQUE INDEX "Offer_client_email_key" ON "Offer"("client_email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Offer_prospect_id_key" ON "Offer"("prospect_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Offer_event_id_key" ON "Offer"("event_id");
+
+-- CreateIndex
+CREATE INDEX "Offer_id_idx" ON "Offer"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_email_key" ON "Client"("email");
+
+-- CreateIndex
+CREATE INDEX "Client_email_idx" ON "Client"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Event_prospect_id_key" ON "Event"("prospect_id");
@@ -133,11 +179,26 @@ CREATE UNIQUE INDEX "Event_prospect_id_key" ON "Event"("prospect_id");
 -- CreateIndex
 CREATE UNIQUE INDEX "Specification_event_id_key" ON "Specification"("event_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Specification_offer_id_key" ON "Specification"("offer_id");
+
+-- AddForeignKey
+ALTER TABLE "Prospect" ADD CONSTRAINT "Prospect_client_email_fkey" FOREIGN KEY ("client_email") REFERENCES "Client"("email") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "Prospect" ADD CONSTRAINT "Prospect_exhibitor_id_fkey" FOREIGN KEY ("exhibitor_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Client" ADD CONSTRAINT "Client_prospect_id_fkey" FOREIGN KEY ("prospect_id") REFERENCES "Prospect"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Offer" ADD CONSTRAINT "Offer_client_email_fkey" FOREIGN KEY ("client_email") REFERENCES "Client"("email") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Offer" ADD CONSTRAINT "Offer_prospect_id_fkey" FOREIGN KEY ("prospect_id") REFERENCES "Prospect"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Offer" ADD CONSTRAINT "Offer_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Offer" ADD CONSTRAINT "Offer_exhibitor_id_fkey" FOREIGN KEY ("exhibitor_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_exhibitor_id_fkey" FOREIGN KEY ("exhibitor_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -147,6 +208,9 @@ ALTER TABLE "Event" ADD CONSTRAINT "Event_prospect_id_fkey" FOREIGN KEY ("prospe
 
 -- AddForeignKey
 ALTER TABLE "Specification" ADD CONSTRAINT "Specification_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Specification" ADD CONSTRAINT "Specification_offer_id_fkey" FOREIGN KEY ("offer_id") REFERENCES "Offer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Provision" ADD CONSTRAINT "Provision_specification_id_fkey" FOREIGN KEY ("specification_id") REFERENCES "Specification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
