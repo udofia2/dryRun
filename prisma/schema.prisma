@@ -39,13 +39,13 @@ model User {
 model Prospect {
   id          String       @id @default(uuid())
   date        DateTime @default(now())
-  client_name String
   source      String
   status      String @default("Pending")
 
-  client     Client?
+  client_email String
+  client    Client @relation(fields: [client_email], references: [email])
+
   event     Event?
-  offer    Offer?
 
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
@@ -59,16 +59,9 @@ model Prospect {
 model Offer {
   id String @id @default(uuid())
   date DateTime @default(now())
-  location String
   status String @default("Pending")
 
-  specification    Specification?
-
-  client_email String @unique
-  client    Client @relation(fields: [client_email], references: [email])
-
-  prospect_id String @unique
-  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+  payment_structure PaymentStructure?
 
   event_id String @unique
   event    Event @relation(fields: [event_id], references: [id])
@@ -89,10 +82,8 @@ model Client {
   name         String
   phone_number String
 
-  prospect_id String   @unique
-  prospect    Prospect @relation(fields: [prospect_id], references: [id])
-
-  offer    Offer[]
+  prospects    Prospect[]
+  events      Event[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -100,12 +91,15 @@ model Client {
   @@index([email])
 }
 
-model Payment {
+model PaymentStructure {
   id String @id @default(uuid())
 
   structure PAYMENTSTRUCTURE
   initial_deposit Boolean @default(false)
   initial_deposit_amount Float?
+
+  offer_id String @unique
+  offer    Offer @relation(fields: [offer_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -132,8 +126,11 @@ model Event {
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
 
-  prospect_id String  @unique
-  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+  client_email String
+  client    Client @relation(fields: [client_email], references: [email])
+
+  prospect_id String?  @unique
+  prospect    Prospect? @relation(fields: [prospect_id], references: [id])
 
   specification Specification?
 
@@ -152,9 +149,6 @@ model Specification {
 
   event_id String @unique
   event    Event @relation(fields: [event_id], references: [id])
-
-  offer_id String @unique
-  offer    Offer @relation(fields: [offer_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

@@ -5,19 +5,23 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  UseGuards,
+  Req
 } from "@nestjs/common";
 import { OfferService } from "./offer.service";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
 import { CreateOfferDto } from "./dto";
+import { AuthGuard } from "src/auth/guard";
 
+@UseGuards(AuthGuard)
 @Controller("offer")
 export class OfferController {
   constructor(private readonly offerService: OfferService) {}
 
   @Post()
-  create(@Body() dto: CreateOfferDto) {
-    return this.offerService.create(dto);
+  create(@Body() dto: CreateOfferDto, @Req() req: any) {
+    return this.offerService.create(dto, req);
   }
 
   @Get()
