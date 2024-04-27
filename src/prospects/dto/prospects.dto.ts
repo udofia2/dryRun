@@ -102,10 +102,6 @@ class Event {
 export class CreateProspectDto {
   @IsString()
   @IsNotEmpty()
-  client_name: string;
-
-  @IsString()
-  @IsNotEmpty()
   source: string;
 
   @IsNotEmpty()

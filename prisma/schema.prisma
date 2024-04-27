@@ -38,11 +38,12 @@ model User {
 model Prospect {
   id          String       @id @default(uuid())
   date        DateTime @default(now())
-  client_name String
   source      String
   status      String @default("Pending")
 
-  client     Client?
+  client_email String
+  client    Client @relation(fields: [client_email], references: [email])
+
   event     Event?
 
   exhibitor_id String
@@ -56,16 +57,17 @@ model Prospect {
 
 model Client {
   id           String     @id @default(uuid())
-  email        String
+  email        String     @unique
   type         String
   name         String
   phone_number String
 
-  prospect_id String   @unique
-  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+  prospects    Prospect[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([email])
 }
 
 model Event {
