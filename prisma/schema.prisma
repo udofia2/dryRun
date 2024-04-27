@@ -45,6 +45,7 @@ model Prospect {
 
   client     Client?
   event     Event?
+  offer    Offer?
 
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
@@ -63,8 +64,14 @@ model Offer {
 
   specification    Specification?
 
-  client_id String @unique
-  client    Client @relation(fields: [client_id], references: [id])
+  client_email String @unique
+  client    Client @relation(fields: [client_email], references: [email])
+
+  prospect_id String @unique
+  prospect    Prospect @relation(fields: [prospect_id], references: [id])
+
+  event_id String @unique
+  event    Event @relation(fields: [event_id], references: [id])
 
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
@@ -77,7 +84,7 @@ model Offer {
 
 model Client {
   id           String     @id @default(uuid())
-  email        String
+  email        String     @unique
   type         String
   name         String
   phone_number String
@@ -89,11 +96,13 @@ model Client {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([email])
 }
 
 model Payment {
   id String @id @default(uuid())
-  
+
   structure PAYMENTSTRUCTURE
   initial_deposit Boolean @default(false)
   initial_deposit_amount Float?
@@ -127,6 +136,8 @@ model Event {
   prospect    Prospect @relation(fields: [prospect_id], references: [id])
 
   specification Specification?
+
+  offer    Offer?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

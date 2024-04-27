@@ -47,7 +47,7 @@ class Provision {
   amount: number;
 }
 
-class Specification {
+export class Specification {
   @IsString()
   @IsNotEmpty()
   theme: string;
@@ -59,7 +59,7 @@ class Specification {
   provisions: Provision[];
 }
 
-class Client {
+export class Client {
   @IsEmail()
   email: string;
 
@@ -73,7 +73,7 @@ class Client {
   phone_number: string;
 }
 
-class Event {
+export class Event {
   @IsString()
   name: string;
 

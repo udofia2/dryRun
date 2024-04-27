@@ -1,15 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OfferService } from './offer.service';
-import { CreateOfferDto } from './dto/create-offer.dto';
-import { UpdateOfferDto } from './dto/update-offer.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete
+} from "@nestjs/common";
+import { OfferService } from "./offer.service";
+import { UpdateOfferDto } from "./dto/update-offer.dto";
+import { CreateOfferDto } from "./dto";
 
-@Controller('offer')
+@Controller("offer")
 export class OfferController {
   constructor(private readonly offerService: OfferService) {}
 
   @Post()
-  create(@Body() createOfferDto: CreateOfferDto) {
-    return this.offerService.create(createOfferDto);
+  create(@Body() dto: CreateOfferDto) {
+    return this.offerService.create(dto);
   }
 
   @Get()
@@ -17,18 +25,18 @@ export class OfferController {
     return this.offerService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.offerService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOfferDto: UpdateOfferDto) {
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() updateOfferDto: UpdateOfferDto) {
     return this.offerService.update(+id, updateOfferDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  remove(@Param("id") id: string) {
     return this.offerService.remove(+id);
   }
 }
