@@ -7,15 +7,15 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req
+  Req,
+  Query
 } from "@nestjs/common";
 import { OfferService } from "./offer.service";
-import { UpdateOfferDto } from "./dto/update-offer.dto";
 import { CreateOfferDto } from "./dto";
 import { AuthGuard } from "src/auth/guard";
 
 @UseGuards(AuthGuard)
-@Controller("offer")
+@Controller("offers")
 export class OfferController {
   constructor(private readonly offerService: OfferService) {}
 
@@ -25,8 +25,13 @@ export class OfferController {
   }
 
   @Get()
-  findAll() {
-    return this.offerService.findAll();
+  filter(@Query("status") status: string, @Req() req: any) {
+    return this.offerService.filter(status, req);
+  }
+
+  @Get("all")
+  findAll(@Req() req: any) {
+    return this.offerService.findAll(req);
   }
 
   @Get(":id")
@@ -34,9 +39,13 @@ export class OfferController {
     return this.offerService.findOne(+id);
   }
 
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateOfferDto: UpdateOfferDto) {
-    return this.offerService.update(+id, updateOfferDto);
+  @Patch("update-status/:id")
+  updateOfferStatus(
+    @Param("id") id: string,
+    @Body("status") status: string,
+    @Req() req: Request
+  ) {
+    return this.offerService.updateOfferStatus(id, status, req);
   }
 
   @Delete(":id")

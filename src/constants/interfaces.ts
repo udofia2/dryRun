@@ -23,3 +23,9 @@ export enum STATUSTYPE {
   "converted" = "Converted",
   "rejected" = "Rejected"
 }
+
+export enum OFFERSTATUSTYPE {
+  "pending" = "Pending",
+  "accepted" = "Accepted",
+  "rejected" = "Rejected"
+}
