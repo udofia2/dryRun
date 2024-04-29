@@ -19,7 +19,7 @@ import { AuthGuard } from "src/auth/guard";
 export class OfferController {
   constructor(private readonly offerService: OfferService) {}
 
-  @Post()
+  @Post("create")
   create(@Body() dto: CreateOfferDto, @Req() req: any) {
     return this.offerService.create(dto, req);
   }

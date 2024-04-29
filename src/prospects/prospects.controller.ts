@@ -18,7 +18,7 @@ import { AuthGuard } from "src/auth/guard";
 export class ProspectsController {
   constructor(private readonly prospectsService: ProspectsService) {}
 
-  @Post()
+  @Post("create")
   create(@Body() dto: CreateProspectDto, @Req() req: Request) {
     return this.prospectsService.create(dto, req);
   }
