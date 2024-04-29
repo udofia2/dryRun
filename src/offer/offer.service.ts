@@ -1,8 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { CreateOfferDto } from "./dto";
-import { UpdateOfferDto } from "./dto/update-offer.dto";
 import { DatabaseService } from "src/database/database.service";
-import { CLIENTTYPE, LOCATIONTYPE } from "src/constants";
+import {
+  CLIENTTYPE,
+  LOCATIONTYPE,
+  OFFERSTATUSTYPE,
+  STATUSTYPE
+} from "src/constants";
 import { PAYMENTSTRUCTURE } from "@prisma/client";
 
 @Injectable()
@@ -111,16 +115,65 @@ export class OfferService {
     });
   }
 
-  findAll() {
-    return `This action returns all offer`;
+  /**
+   * FILTER BY STATUS
+   * @param status
+   * @param req
+   * @returns
+   */
+  async filter(status: string, req: any) {
+    const offers = await this.db.offer.findMany({
+      where: {
+        status: STATUSTYPE[status.toLowerCase()],
+        exhibitor_id: req.user.id
+      }
+    });
+
+    return {
+      success: true,
+      message: "Offers retrieved successfully",
+      data: offers
+    };
+  }
+
+  /**
+   * FIND ALL EXHIBITOR'S OFFERS
+   * @param req
+   * @returns
+   */
+  async findAll(req: any) {
+    const offers = await this.db.offer.findMany({
+      where: { exhibitor_id: req.user.id }
+    });
+
+    return {
+      success: true,
+      message: "Offers retrieved successfully",
+      data: offers
+    };
   }
 
   findOne(id: number) {
     return `This action returns a #${id} offer`;
   }
 
-  update(id: number, updateOfferDto: UpdateOfferDto) {
-    return `This action updates a #${id} offer`;
+  async updateOfferStatus(id: string, status: string, req: any) {
+    const offer = await this.db.offer.update({
+      where: { id },
+      data: { status: OFFERSTATUSTYPE[status.toLowerCase()] }
+    });
+
+    if (offer) {
+      if (offer.exhibitor_id !== req.user.id) {
+        throw new UnauthorizedException("Unauthorized access to offer!");
+      }
+    }
+
+    return {
+      success: true,
+      message: "Offer status updated successfully",
+      data: offer
+    };
   }
 
   remove(id: number) {

@@ -18,7 +18,7 @@ import { AuthGuard } from "src/auth/guard";
 export class ProspectsController {
   constructor(private readonly prospectsService: ProspectsService) {}
 
-  @Post()
+  @Post("create")
   create(@Body() dto: CreateProspectDto, @Req() req: Request) {
     return this.prospectsService.create(dto, req);
   }
@@ -38,9 +38,9 @@ export class ProspectsController {
     return this.prospectsService.findOne(id, req);
   }
 
-  @Patch()
+  @Patch("update-status/:id")
   update(
-    @Query("id") id: string,
+    @Param("id") id: string,
     @Body("status") status: string,
     @Req() req: Request
   ) {
