@@ -49,7 +49,7 @@ class Provision {
 
 export class Specification {
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   theme: string;
 
   @IsNotEmpty()

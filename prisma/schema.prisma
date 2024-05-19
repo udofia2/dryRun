@@ -113,21 +113,38 @@ enum PAYMENTSTRUCTURE {
 model Event {
   id String @id @default(uuid())
   name        String @default("undecided")
-  date       DateTime
-  type       String
+  date       DateTime?
+  type       String?
+  link      String?
 
   description String?
   city        String?
   state       String?
 
   location_type   String
+  virtual_meeting_link String?
   location_address String @default("undecided")
+
+  // Event Schedule
+  schedule_type SCHEDULETYPE?
+  start_date DateTime?
+  start_time String?
+  end_date DateTime?
+  end_time String?
+  recurring_frequency String?
+
+  // Event owner social links
+  facebook_link String?
+  instagram_link String?
+  x_link String?
+  website_link String?
+  cover_art_url String?
 
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
 
-  client_email String
-  client    Client @relation(fields: [client_email], references: [email])
+  client_email String?
+  client    Client? @relation(fields: [client_email], references: [email])
 
   prospect_id String?  @unique
   prospect    Prospect? @relation(fields: [prospect_id], references: [id])
@@ -136,13 +153,15 @@ model Event {
 
   offer    Offer?
 
+  entry_passes EntryPass[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
 model Specification {
   id String @id @default(uuid())
-  theme String
+  theme String?
 
   provisions Provision[]
   activities Activity[]
@@ -165,6 +184,8 @@ model Provision {
 
   amount Float
 
+  vendor_name String? // TODO: Isn't it same as exhibitor_name?
+
   specification_id String
   specification    Specification @relation(fields: [specification_id], references: [id])
 
@@ -184,11 +205,73 @@ model Activity {
 
   amount Float
 
+  vendor_name String?
+
   specification_id String
   specification    Specification @relation(fields: [specification_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model EntryPass {
+  id String @id @default(uuid())
+  name String
+  type ENTRYPASSTYPE
+  stock_type STOCKTYPE @default(unlimited)
+  reservation_limit Int?
+  description String?
+
+  price Float? @default(0)
+  transfer_processing_fee_to_guest Boolean @default(false)
+
+  ticket_type TICKETTYPE?
+
+  invite Invite?
+
+  event_id String
+  event    Event @relation(fields: [event_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+}
+
+model Invite {
+  id String @id @default(uuid())
+  sender_email String
+  sender_name String
+  recipients_emails String[]
+
+  subject String
+  message String
+  
+  entry_pass_id String @unique
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum TICKETTYPE {
+  free
+  paid
+}
+
+enum STOCKTYPE {
+  unlimited
+  limited
+}
+
+enum ENTRYPASSTYPE {
+  free
+  paid
+  invite_only
+}
+
+enum SCHEDULETYPE {
+  one_time
+  recurring
 }
 
 enum USERTYPE {
