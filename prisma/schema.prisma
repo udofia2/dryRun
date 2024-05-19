@@ -113,7 +113,7 @@ enum PAYMENTSTRUCTURE {
 model Event {
   id String @id @default(uuid())
   name        String @default("undecided")
-  date       DateTime
+  date       DateTime?
   type       String?
   link      String?
 
@@ -143,8 +143,8 @@ model Event {
   exhibitor_id String
   exhibitor    User @relation(fields: [exhibitor_id], references: [id])
 
-  client_email String
-  client    Client @relation(fields: [client_email], references: [email])
+  client_email String?
+  client    Client? @relation(fields: [client_email], references: [email])
 
   prospect_id String?  @unique
   prospect    Prospect? @relation(fields: [prospect_id], references: [id])
@@ -161,7 +161,7 @@ model Event {
 
 model Specification {
   id String @id @default(uuid())
-  theme String
+  theme String?
 
   provisions Provision[]
   activities Activity[]
@@ -216,18 +216,20 @@ model Activity {
 
 model EntryPass {
   id String @id @default(uuid())
+  name String
   type ENTRYPASSTYPE
   stock_type STOCKTYPE @default(unlimited)
   reservation_limit Int?
   description String?
 
-  price Float?
+  price Float? @default(0)
+  transfer_processing_fee_to_guest Boolean @default(false)
 
   ticket_type TICKETTYPE?
 
   invite Invite?
 
-  event_id String @unique
+  event_id String
   event    Event @relation(fields: [event_id], references: [id])
 
   created_at DateTime @default(now())

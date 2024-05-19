@@ -123,7 +123,7 @@ export class ProspectsService {
 
   async findOne(id: string, req: any) {
     const prospect = await this.db.prospect.findUnique({
-      where: { id },
+      where: { id, exhibitor_id: req.user.id },
       include: {
         client: true,
         event: {
@@ -138,12 +138,6 @@ export class ProspectsService {
         }
       }
     });
-
-    if (prospect) {
-      if (prospect.exhibitor_id !== req.user.id) {
-        throw new UnauthorizedException("Unauthorized access to prospect");
-      }
-    }
 
     return {
       success: true,
