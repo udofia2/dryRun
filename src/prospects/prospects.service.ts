@@ -15,9 +15,8 @@ export class ProspectsService {
   async create(dto: CreateProspectDto, req: any) {
     return this.db.$transaction(async (tx) => {
       const { source } = dto;
-      // CREATE PROSPECT
-      console.log(req.user.id);
 
+      // CREATE PROSPECT
       let prospect = await tx.prospect.create({
         data: {
           source: SOURCETYPE[source.toLowerCase()],
@@ -112,7 +111,10 @@ export class ProspectsService {
 
   async findAll(req: any) {
     const prospects = await this.db.prospect.findMany({
-      where: { exhibitor_id: req.user.id }
+      where: { exhibitor_id: req.user.id },
+      include: {
+        client: true
+      }
     });
     return {
       success: true,
