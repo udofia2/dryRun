@@ -9,6 +9,8 @@ done
 
 echo "Database started"
 
-yarn migration:create
+yarn run migration:run
+
+yarn migration:generate
 
 yarn start:dev

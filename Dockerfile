@@ -1,6 +1,6 @@
-FROM node:alpine
+FROM node:20-alpine
 
-WORKDIR /events-backend
+WORKDIR /app
 
 COPY tsconfig*.json ./
 
@@ -10,4 +10,6 @@ RUN yarn install
 
 COPY . .
 
-ENTRYPOINT ["/events-backend/dev.entrypoint.sh"]
+EXPOSE 4000
+
+ENTRYPOINT ["/app/dev.entrypoint.sh"]
