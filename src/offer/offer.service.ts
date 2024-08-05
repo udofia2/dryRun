@@ -4,6 +4,8 @@ import { DatabaseService } from "src/database/database.service";
 import {
   CLIENTTYPE,
   LOCATIONTYPE,
+  OFFER_ACCEPTED,
+  OFFER_CREATED,
   OFFERSTATUSTYPE,
   STATUSTYPE
 } from "src/constants";
@@ -15,7 +17,7 @@ export class OfferService {
 
   /**
    * CREATE STANDALONE OFFER
-   * @param dto
+   * @param {CreateOfferDto} dto
    * @param req
    * @returns
    */
@@ -107,6 +109,15 @@ export class OfferService {
         }
       });
 
+      // CREATE NOTIFICATION
+      await tx.notification.create({
+        data: {
+          feature: "offer",
+          message: `${OFFER_CREATED} - ${offer.event.client.name}`,
+          user_id: offer.event.client.id
+        }
+      });
+
       return {
         success: true,
         message: "Offer created successfully",
@@ -160,7 +171,8 @@ export class OfferService {
   async updateOfferStatus(id: string, status: string, req: any) {
     const offer = await this.db.offer.update({
       where: { id },
-      data: { status: OFFERSTATUSTYPE[status.toLowerCase()] }
+      data: { status: OFFERSTATUSTYPE[status.toLowerCase()] },
+      include: { event: { include: { client: true } } }
     });
 
     if (offer) {
@@ -168,6 +180,15 @@ export class OfferService {
         throw new UnauthorizedException("Unauthorized access to offer!");
       }
     }
+
+    // UPDATE NOTIFICATION
+    await this.db.notification.create({
+      data: {
+        feature: "offer",
+        message: `${OFFER_ACCEPTED} - ${offer.event.client.name}`,
+        user_id: req.user.id
+      }
+    });
 
     return {
       success: true,

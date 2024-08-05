@@ -4,6 +4,8 @@ import { DatabaseService } from "src/database/database.service";
 import {
   CLIENTTYPE,
   LOCATIONTYPE,
+  PROSPECT_CONVERSION,
+  PROSPECT_CREATED,
   SOURCETYPE,
   STATUSTYPE
 } from "src/constants";
@@ -101,6 +103,14 @@ export class ProspectsService {
         }
       });
 
+      await tx.notification.create({
+        data: {
+          feature: "prospect",
+          message: `${PROSPECT_CREATED} - ${dto.client.name}`,
+          user_id: req.user.id
+        }
+      });
+
       return {
         success: true,
         message: "Prospect created successfully",
@@ -160,17 +170,34 @@ export class ProspectsService {
     };
   }
 
+  /**
+   * UPDATE PROSPECT STATUS
+   * @param id
+   * @param status
+   * @param req
+   * @returns
+   */
   async update(id: string, status: string, req: any) {
     const prospect = await this.db.prospect.update({
       where: { id },
-      data: { status: STATUSTYPE[status.toLowerCase()] }
+      data: { status: STATUSTYPE[status.toLowerCase()] },
+      include: { client: true }
     });
 
     if (prospect) {
       if (prospect.exhibitor_id !== req.user.id) {
-        throw new UnauthorizedException("Unauthorized access to prospect");
+        throw new UnauthorizedException("Unauthorized!");
       }
     }
+
+    // create notification
+    await this.db.notification.create({
+      data: {
+        feature: "prospect",
+        message: `${PROSPECT_CONVERSION} - ${prospect.client.name}`,
+        user_id: req.user.id
+      }
+    });
 
     return {
       success: true,

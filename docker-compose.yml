@@ -6,9 +6,11 @@ services:
   #   build: .
   #   ports:
   #     - 4000:4000
-  #   volumes:
-  #     - .:/events-backend
   #   env_file: .env
+  #   volumes:
+  #     - .:/events-be
+  #     - /events-be/node_modules:/events-be/node_modules
+  #   restart: always
   #   depends_on:
   #     - db
 

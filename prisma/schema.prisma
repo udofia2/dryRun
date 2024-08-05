@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(uuid())
+  id           String       @id @default(uuid())
   email        String       @unique
   firstname    String
   lastname     String
@@ -30,6 +30,8 @@ model User {
   prospects Prospect[]
   offers    Offer[]
 
+  notifications Notification[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -37,18 +39,18 @@ model User {
 }
 
 model Prospect {
-  id          String       @id @default(uuid())
-  date        DateTime @default(now())
-  source      String
-  status      String @default("Pending")
+  id     String   @id @default(uuid())
+  date   DateTime @default(now())
+  source String
+  status String   @default("Pending")
 
   client_email String
-  client    Client @relation(fields: [client_email], references: [email])
+  client       Client @relation(fields: [client_email], references: [email])
 
-  event     Event?
+  event Event?
 
   exhibitor_id String
-  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -57,17 +59,17 @@ model Prospect {
 }
 
 model Offer {
-  id String @id @default(uuid())
-  date DateTime @default(now())
-  status String @default("Pending")
+  id     String   @id @default(uuid())
+  date   DateTime @default(now())
+  status String   @default("Pending")
 
   payment_structure PaymentStructure?
 
   event_id String @unique
-  event    Event @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id])
 
   exhibitor_id String
-  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -76,14 +78,14 @@ model Offer {
 }
 
 model Client {
-  id           String     @id @default(uuid())
-  email        String     @unique
+  id           String @id @default(uuid())
+  email        String @unique
   type         String
   name         String
   phone_number String
 
-  prospects    Prospect[]
-  events      Event[]
+  prospects Prospect[]
+  events    Event[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -94,12 +96,12 @@ model Client {
 model PaymentStructure {
   id String @id @default(uuid())
 
-  structure PAYMENTSTRUCTURE
-  initial_deposit Boolean @default(false)
+  structure              PAYMENTSTRUCTURE
+  initial_deposit        Boolean          @default(false)
   initial_deposit_amount Float?
 
   offer_id String @unique
-  offer    Offer @relation(fields: [offer_id], references: [id])
+  offer    Offer  @relation(fields: [offer_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -111,47 +113,47 @@ enum PAYMENTSTRUCTURE {
 }
 
 model Event {
-  id String @id @default(uuid())
-  name        String @default("undecided")
-  date       DateTime?
-  type       String?
-  link      String?
+  id   String    @id @default(uuid())
+  name String    @default("undecided")
+  date DateTime?
+  type String?
+  link String?
 
   description String?
   city        String?
   state       String?
 
-  location_type   String
+  location_type        String
   virtual_meeting_link String?
-  location_address String @default("undecided")
+  location_address     String  @default("undecided")
 
   // Event Schedule
-  schedule_type SCHEDULETYPE?
-  start_date DateTime?
-  start_time String?
-  end_date DateTime?
-  end_time String?
+  schedule_type       SCHEDULETYPE?
+  start_date          DateTime?
+  start_time          String?
+  end_date            DateTime?
+  end_time            String?
   recurring_frequency String?
 
   // Event owner social links
-  facebook_link String?
+  facebook_link  String?
   instagram_link String?
-  x_link String?
-  website_link String?
-  cover_art_url String?
+  x_link         String?
+  website_link   String?
+  cover_art_url  String?
 
   exhibitor_id String
-  exhibitor    User @relation(fields: [exhibitor_id], references: [id])
+  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
 
   client_email String?
-  client    Client? @relation(fields: [client_email], references: [email])
+  client       Client? @relation(fields: [client_email], references: [email])
 
-  prospect_id String?  @unique
+  prospect_id String?   @unique
   prospect    Prospect? @relation(fields: [prospect_id], references: [id])
 
   specification Specification?
 
-  offer    Offer?
+  offer Offer?
 
   entry_passes EntryPass[]
 
@@ -160,27 +162,27 @@ model Event {
 }
 
 model Specification {
-  id String @id @default(uuid())
+  id    String  @id @default(uuid())
   theme String?
 
   provisions Provision[]
   activities Activity[]
 
   event_id String @unique
-  event    Event @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
 model Provision {
-  id String @id @default(uuid())
-  provision String
+  id          String @id @default(uuid())
+  provision   String
   description String
 
   exhibitor_name String?
-  start_date DateTime
-  end_date DateTime
+  start_date     DateTime
+  end_date       DateTime
 
   amount Float
 
@@ -194,14 +196,14 @@ model Provision {
 }
 
 model Activity {
-  id String @id @default(uuid())
-  title String
+  id          String @id @default(uuid())
+  title       String
   description String
 
   exhibitor_name String?
 
   start_date DateTime
-  end_date DateTime
+  end_date   DateTime
 
   amount Float
 
@@ -215,14 +217,14 @@ model Activity {
 }
 
 model EntryPass {
-  id String @id @default(uuid())
-  name String
-  type ENTRYPASSTYPE
-  stock_type STOCKTYPE @default(unlimited)
+  id                String        @id @default(uuid())
+  name              String
+  type              ENTRYPASSTYPE
+  stock_type        STOCKTYPE     @default(unlimited)
   reservation_limit Int?
-  description String?
+  description       String?
 
-  price Float? @default(0)
+  price                            Float?  @default(0)
   transfer_processing_fee_to_guest Boolean @default(false)
 
   ticket_type TICKETTYPE?
@@ -230,24 +232,35 @@ model EntryPass {
   invite Invite?
 
   event_id String
-  event    Event @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
 }
 
 model Invite {
-  id String @id @default(uuid())
-  sender_email String
-  sender_name String
+  id                String   @id @default(uuid())
+  sender_email      String
+  sender_name       String
   recipients_emails String[]
 
   subject String
   message String
-  
-  entry_pass_id String @unique
+
+  entry_pass_id String    @unique
   entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Notification {
+  id      String   @id @default(uuid())
+  date    DateTime @default(now())
+  message String
+  feature String
+  user_id String
+  user    User     @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

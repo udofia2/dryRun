@@ -8,7 +8,8 @@ import { ErrorModule } from "./error/error.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { ProspectsModule } from "./prospects/prospects.module";
 import { OfferModule } from "./offer/offer.module";
-import { EventsModule } from './events/events.module';
+import { EventsModule } from "./events/events.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -27,7 +28,8 @@ import { EventsModule } from './events/events.module';
     ErrorModule,
     ProspectsModule,
     OfferModule,
-    EventsModule
+    EventsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [AppService]
