@@ -9,8 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:localdev": "docker compose up -d; nest start --watch",
-    "start:dev": "nest start --watch",
+    "start:dev": "docker compose up -d; nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -22,8 +21,7 @@
     "migration:create": "prisma migrate dev",
     "migration:dev": "prisma migrate dev",
     "migration:run": "prisma migrate deploy",
-    "migration:generate": "prisma generate",
-    "docker:dev": "docker compose -f docker-compose.yml up"
+    "migration:generate": "prisma generate"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.2.1",
