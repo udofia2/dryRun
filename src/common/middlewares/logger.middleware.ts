@@ -3,13 +3,16 @@ import { Request, Response, NextFunction } from "express";
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-  private readonly logger = new Logger("Response");
+  logger = new Logger("Response");
+  constructor() {
+    this.use = this.use.bind(this);
+  }
 
   use(req: Request, res: Response, next: NextFunction): void {
     const { method, url } = req;
     const requestTime = new Date().getTime();
 
-    res.on("finish", () => {
+    res.on("close", () => {
       const { statusCode } = res;
       const responseTime = new Date().getTime();
 
