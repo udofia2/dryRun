@@ -6,15 +6,16 @@ import {
   LOCATIONTYPE,
   PROSPECT_CONVERSION,
   PROSPECT_CREATED,
-  SOURCETYPE,
-  STATUSTYPE
+  SOURCETYPE
 } from "src/constants";
+import { UpdateProspectsDto } from "./dto/update-prospects.dto";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class ProspectsService {
   constructor(private db: DatabaseService) {}
 
-  async create(dto: CreateProspectDto, req: any) {
+  async create(dto: CreateProspectDto, user: User) {
     return this.db.$transaction(async (tx) => {
       const { source } = dto;
 
@@ -22,7 +23,7 @@ export class ProspectsService {
       let prospect = await tx.prospect.create({
         data: {
           source: SOURCETYPE[source.toLowerCase()],
-          exhibitor: { connect: { id: req.user.id } },
+          exhibitor: { connect: { id: user.id } },
           client: {
             connectOrCreate: {
               where: { email: dto.client.email },
@@ -51,7 +52,7 @@ export class ProspectsService {
               dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
             ],
           location_address: dto.event.location_address ?? undefined,
-          exhibitor_id: req.user.id,
+          exhibitor_id: user.id,
           client_email: dto.client.email,
           prospect_id: prospect.id
         }
@@ -107,7 +108,7 @@ export class ProspectsService {
         data: {
           feature: "prospect",
           message: `${PROSPECT_CREATED} - ${dto.client.name}`,
-          user_id: req.user.id
+          user_id: user.id
         }
       });
 
@@ -119,9 +120,14 @@ export class ProspectsService {
     });
   }
 
-  async findAll(req: any) {
+  /**
+   * FIND ALL PROSPECTS
+   * @param {User} user - The user making the request
+   * @returns
+   */
+  async findAll(user: User) {
     const prospects = await this.db.prospect.findMany({
-      where: { exhibitor_id: req.user.id },
+      where: { exhibitor_id: user.id },
       include: {
         client: true
       }
@@ -133,9 +139,15 @@ export class ProspectsService {
     };
   }
 
-  async findOne(id: string, req: any) {
+  /**
+   * Find a prospect by id
+   * @param {string} id - The id of the prospect to find
+   * @param {User} user - The user making the request
+   * @returns
+   */
+  async findOne(id: string, user: User) {
     const prospect = await this.db.prospect.findUnique({
-      where: { id, exhibitor_id: req.user.id },
+      where: { id, exhibitor_id: user.id },
       include: {
         client: true,
         event: {
@@ -171,21 +183,21 @@ export class ProspectsService {
   }
 
   /**
-   * UPDATE PROSPECT STATUS
-   * @param id
-   * @param status
-   * @param req
+   * UPDATE PROSPECT FIELDS
+   * @param {string} id - The id of the prospect to update
+   * @param {UpdateProspectsDto} dto - The updated prospects field(s)
+   * @param {User} user - The user making the request
    * @returns
    */
-  async update(id: string, status: string, req: any) {
+  async update(id: string, dto: UpdateProspectsDto, user: User) {
     const prospect = await this.db.prospect.update({
       where: { id },
-      data: { status: STATUSTYPE[status.toLowerCase()] },
+      data: dto,
       include: { client: true }
     });
 
     if (prospect) {
-      if (prospect.exhibitor_id !== req.user.id) {
+      if (prospect.exhibitor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized!");
       }
     }
@@ -195,13 +207,41 @@ export class ProspectsService {
       data: {
         feature: "prospect",
         message: `${PROSPECT_CONVERSION} - ${prospect.client.name}`,
-        user_id: req.user.id
+        user_id: user.id
       }
     });
 
     return {
       success: true,
       message: "Prospect updated successfully",
+      data: prospect
+    };
+  }
+
+  /**
+   * DELETE PROSPECT
+   * @param {string} id - The id of the prospect to delete
+   * @param {User} user
+   * @returns
+   */
+  async delete(id: string, user: User) {
+    const prospect = await this.db.prospect.findUnique({
+      where: { id }
+    });
+
+    if (prospect) {
+      if (prospect.exhibitor_id !== user.id) {
+        throw new UnauthorizedException("Unauthorized!");
+      }
+    }
+
+    await this.db.prospect.delete({
+      where: { id }
+    });
+
+    return {
+      success: true,
+      message: "Prospect deleted successfully!",
       data: prospect
     };
   }

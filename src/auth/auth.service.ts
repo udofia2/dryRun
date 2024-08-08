@@ -31,12 +31,19 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly otpService: OtpService
   ) {}
+
+  /**
+   * CREATE USER
+   * @param {CreateAuthDto} dto
+   * @returns
+   */
   async register(dto: CreateAuthDto) {
     dto.email = dto.email.toLowerCase();
     // FIND USER
     const userExists = await this.db.user.findUnique({
       where: { email: dto.email }
     });
+    console.log("userExists", userExists);
     if (userExists) {
       throw new ForbiddenException("User already exists. Please login");
     }
@@ -71,6 +78,8 @@ export class AuthService {
     const user = await this.db.user.findUnique({
       where: { email: dto.email }
     });
+
+    console.log("user", user);
 
     if (!user) {
       throw new ForbiddenException("Invalid email or password");

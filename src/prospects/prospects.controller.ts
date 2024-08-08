@@ -7,11 +7,15 @@ import {
   UseGuards,
   Req,
   Query,
-  Patch
+  Patch,
+  Delete
 } from "@nestjs/common";
 import { ProspectsService } from "./prospects.service";
 import { CreateProspectDto } from "./dto/prospects.dto";
 import { AuthGuard } from "src/auth/guard";
+import { UpdateProspectsDto } from "./dto/update-prospects.dto";
+import { CurrentUser } from "src/common/decorators/currentUser.decorator";
+import { User } from "@prisma/client";
 
 @UseGuards(AuthGuard)
 @Controller("prospects")
@@ -19,8 +23,8 @@ export class ProspectsController {
   constructor(private readonly prospectsService: ProspectsService) {}
 
   @Post("create")
-  create(@Body() dto: CreateProspectDto, @Req() req: Request) {
-    return this.prospectsService.create(dto, req);
+  create(@Body() dto: CreateProspectDto, @CurrentUser() user: User) {
+    return this.prospectsService.create(dto, user);
   }
 
   @Get()
@@ -29,21 +33,26 @@ export class ProspectsController {
   }
 
   @Get("all")
-  findAll(@Req() req: Request) {
-    return this.prospectsService.findAll(req);
+  findAll(@CurrentUser() user: User) {
+    return this.prospectsService.findAll(user);
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string, @Req() req: Request) {
-    return this.prospectsService.findOne(id, req);
+  findOne(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.prospectsService.findOne(id, user);
   }
 
-  @Patch("update-status/:id")
+  @Patch(":id")
   update(
     @Param("id") id: string,
-    @Body("status") status: string,
-    @Req() req: Request
+    @Body() dto: UpdateProspectsDto,
+    @CurrentUser() user: User
   ) {
-    return this.prospectsService.update(id, status, req);
+    return this.prospectsService.update(id, dto, user);
+  }
+
+  @Delete(":id")
+  delete(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.prospectsService.delete(id, user);
   }
 }

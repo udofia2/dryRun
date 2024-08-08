@@ -39,10 +39,10 @@ model User {
 }
 
 model Prospect {
-  id     String   @id @default(uuid())
-  date   DateTime @default(now())
+  id     String             @id @default(uuid())
+  date   DateTime           @default(now())
   source String
-  status String   @default("Pending")
+  status PROSPECTSTATUSTYPE @default(pending)
 
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
@@ -264,6 +264,12 @@ model Notification {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+enum PROSPECTSTATUSTYPE {
+  pending
+  converted
+  rejected
 }
 
 enum TICKETTYPE {
