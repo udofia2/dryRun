@@ -20,9 +20,9 @@ export enum SOURCETYPE {
 }
 
 export enum STATUSTYPE {
-  "pending" = "Pending",
-  "converted" = "Converted",
-  "rejected" = "Rejected"
+  "pending" = "pending",
+  "converted" = "converted",
+  "rejected" = "rejected"
 }
 
 export enum OFFERSTATUSTYPE {

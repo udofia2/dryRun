@@ -20,8 +20,8 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post("create")
-  create(@Body() createEventDto: CreateEventDto, @Req() req: Request) {
-    return this.eventsService.create(createEventDto, req);
+  create(@Body() dto: CreateEventDto, @Req() req: Request) {
+    return this.eventsService.create(dto, req);
   }
 
   @Get("all")
@@ -35,8 +35,8 @@ export class EventsController {
   }
 
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(+id, updateEventDto);
+  update(@Param("id") id: string, @Body() dto: UpdateEventDto) {
+    return this.eventsService.update(+id, dto);
   }
 
   @Delete(":id")

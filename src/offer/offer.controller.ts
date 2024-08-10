@@ -13,6 +13,9 @@ import {
 import { OfferService } from "./offer.service";
 import { CreateOfferDto } from "./dto";
 import { AuthGuard } from "src/auth/guard";
+import { CurrentUser } from "src/common/decorators/currentUser.decorator";
+import { User } from "@prisma/client";
+import { UpdateOfferDto } from "./dto/update-offer.dto";
 
 @UseGuards(AuthGuard)
 @Controller("offers")
@@ -20,36 +23,36 @@ export class OfferController {
   constructor(private readonly offerService: OfferService) {}
 
   @Post("create")
-  create(@Body() dto: CreateOfferDto, @Req() req: any) {
-    return this.offerService.create(dto, req);
+  create(@Body() dto: CreateOfferDto, @CurrentUser() user: User) {
+    return this.offerService.create(dto, user);
   }
 
   @Get()
-  filter(@Query("status") status: string, @Req() req: any) {
-    return this.offerService.filter(status, req);
+  filter(@Query("status") status: string, @CurrentUser() user: User) {
+    return this.offerService.filter(status, user);
   }
 
   @Get("all")
-  findAll(@Req() req: any) {
-    return this.offerService.findAll(req);
+  findAll(@CurrentUser() user: User) {
+    return this.offerService.findAll(user);
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.offerService.findOne(+id);
+  findOne(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.offerService.findById(id, user);
   }
 
-  @Patch("update-status/:id")
-  updateOfferStatus(
+  @Patch(":id")
+  update(
     @Param("id") id: string,
-    @Body("status") status: string,
-    @Req() req: Request
+    @Body() dto: UpdateOfferDto,
+    @CurrentUser() user: User
   ) {
-    return this.offerService.updateOfferStatus(id, status, req);
+    return this.offerService.update(id, dto, user);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.offerService.remove(+id);
+  delete(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.offerService.delete(id, user);
   }
 }

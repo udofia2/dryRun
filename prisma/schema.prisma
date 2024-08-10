@@ -59,9 +59,9 @@ model Prospect {
 }
 
 model Offer {
-  id     String   @id @default(uuid())
-  date   DateTime @default(now())
-  status String   @default("Pending")
+  id     String     @id @default(uuid())
+  date   DateTime   @default(now())
+  status STATUSTYPE @default(pending)
 
   payment_structure PaymentStructure?
 
@@ -101,7 +101,7 @@ model PaymentStructure {
   initial_deposit_amount Float?
 
   offer_id String @unique
-  offer    Offer  @relation(fields: [offer_id], references: [id])
+  offer    Offer  @relation(fields: [offer_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -269,6 +269,12 @@ model Notification {
 enum PROSPECTSTATUSTYPE {
   pending
   converted
+  rejected
+}
+
+enum STATUSTYPE {
+  pending
+  accepted
   rejected
 }
 

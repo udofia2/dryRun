@@ -1,4 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateOfferDto } from './create-offer.dto';
+import { IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { STATUSTYPE } from "@prisma/client";
 
-export class UpdateOfferDto extends PartialType(CreateOfferDto) {}
+export class UpdateOfferDto {
+  @IsString()
+  @ApiProperty()
+  status: STATUSTYPE;
+}

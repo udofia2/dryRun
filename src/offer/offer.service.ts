@@ -9,7 +9,8 @@ import {
   OFFERSTATUSTYPE,
   STATUSTYPE
 } from "src/constants";
-import { PAYMENTSTRUCTURE } from "@prisma/client";
+import { PAYMENTSTRUCTURE, User } from "@prisma/client";
+import { UpdateOfferDto } from "./dto/update-offer.dto";
 
 @Injectable()
 export class OfferService {
@@ -18,10 +19,10 @@ export class OfferService {
   /**
    * CREATE STANDALONE OFFER
    * @param {CreateOfferDto} dto
-   * @param req
+   * @param {User} user
    * @returns
    */
-  async create(dto: CreateOfferDto, req: any) {
+  async create(dto: CreateOfferDto, user: User) {
     return this.db.$transaction(async (tx) => {
       // CREATE EVENT
       const event = await tx.event.create({
@@ -37,7 +38,7 @@ export class OfferService {
               dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
             ],
           location_address: dto.event.location_address ?? undefined,
-          exhibitor: { connect: { id: req.user.id } },
+          exhibitor: { connect: { id: user.id } },
           client: {
             connectOrCreate: {
               where: { email: dto.client.email },
@@ -83,7 +84,7 @@ export class OfferService {
 
       const offer = await tx.offer.create({
         data: {
-          exhibitor: { connect: { id: req.user.id } },
+          exhibitor: { connect: { id: user.id } },
           payment_structure: {
             create: {
               structure:
@@ -114,7 +115,7 @@ export class OfferService {
         data: {
           feature: "offer",
           message: `${OFFER_CREATED} - ${offer.event.client.name}`,
-          user_id: offer.event.client.id
+          user_id: user.id
         }
       });
 
@@ -129,14 +130,14 @@ export class OfferService {
   /**
    * FILTER BY STATUS
    * @param status
-   * @param req
+   * @param {User} user
    * @returns
    */
-  async filter(status: string, req: any) {
+  async filter(status: string, user: User) {
     const offers = await this.db.offer.findMany({
       where: {
         status: STATUSTYPE[status.toLowerCase()],
-        exhibitor_id: req.user.id
+        exhibitor_id: user.id
       }
     });
 
@@ -149,12 +150,12 @@ export class OfferService {
 
   /**
    * FIND ALL EXHIBITOR'S OFFERS
-   * @param req
+   * @param {User} user
    * @returns
    */
-  async findAll(req: any) {
+  async findAll(user: User) {
     const offers = await this.db.offer.findMany({
-      where: { exhibitor_id: req.user.id }
+      where: { exhibitor_id: user.id }
     });
 
     return {
@@ -164,19 +165,41 @@ export class OfferService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} offer`;
+  /**
+   * FIND ONE OFFER
+   * @param {string} id
+   * @param {User} user
+   * @returns
+   */
+  async findById(id: string, user: User) {
+    const offer = await this.db.offer.findUnique({
+      where: { id, exhibitor_id: user.id }
+    });
+
+    return {
+      success: true,
+      message: "Offer retrieved successfully",
+      data: offer
+    };
   }
 
-  async updateOfferStatus(id: string, status: string, req: any) {
+  /**
+   * UPDATE OFFER FIELDS
+   *
+   * @param {string} id
+   * @param {UpdateOfferDto} dto
+   * @param {User} user
+   * @returns
+   */
+  async update(id: string, dto: UpdateOfferDto, user: User) {
     const offer = await this.db.offer.update({
       where: { id },
-      data: { status: OFFERSTATUSTYPE[status.toLowerCase()] },
+      data: dto,
       include: { event: { include: { client: true } } }
     });
 
     if (offer) {
-      if (offer.exhibitor_id !== req.user.id) {
+      if (offer.exhibitor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized access to offer!");
       }
     }
@@ -186,7 +209,7 @@ export class OfferService {
       data: {
         feature: "offer",
         message: `${OFFER_ACCEPTED} - ${offer.event.client.name}`,
-        user_id: req.user.id
+        user_id: user.id
       }
     });
 
@@ -197,7 +220,31 @@ export class OfferService {
     };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} offer`;
+  /**
+   * DELETE offer
+   * @param {string} id - The id of the offer to delete
+   * @param {User} user
+   * @returns
+   */
+  async delete(id: string, user: User) {
+    const offer = await this.db.offer.findUnique({
+      where: { id }
+    });
+
+    if (offer) {
+      if (offer.exhibitor_id !== user.id) {
+        throw new UnauthorizedException("Unauthorized!");
+      }
+    }
+
+    await this.db.offer.delete({
+      where: { id }
+    });
+
+    return {
+      success: true,
+      message: "offer deleted successfully!",
+      data: offer
+    };
   }
 }
