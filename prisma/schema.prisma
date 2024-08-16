@@ -78,11 +78,12 @@ model Offer {
 }
 
 model Client {
-  id           String @id @default(uuid())
-  email        String @unique
+  id           String  @id @default(uuid())
+  email        String  @unique
   type         String
   name         String
   phone_number String
+  address      String?
 
   prospects Prospect[]
   events    Event[]
@@ -90,7 +91,23 @@ model Client {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  contracts Contract[]
+
   @@index([email])
+}
+
+model PaymentSchedule {
+  id String @id @default(uuid())
+
+  title_of_deliverable String
+  due_date             DateTime
+  amount               Float
+
+  contract_id String?
+  contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PaymentStructure {
@@ -100,8 +117,8 @@ model PaymentStructure {
   initial_deposit        Boolean          @default(false)
   initial_deposit_amount Float?
 
-  offer_id String @unique
-  offer    Offer  @relation(fields: [offer_id], references: [id], onDelete: Cascade)
+  offer_id String? @unique
+  offer    Offer?  @relation(fields: [offer_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -119,11 +136,14 @@ model Event {
   type String?
   link String?
 
+  number_of_guests Int?
+
   description String?
   city        String?
   state       String?
 
   location_type        String
+  location             String?
   virtual_meeting_link String?
   location_address     String  @default("undecided")
 
@@ -156,6 +176,8 @@ model Event {
   offer Offer?
 
   entry_passes EntryPass[]
+
+  contract Contract?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -264,6 +286,50 @@ model Notification {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Contract {
+  id     String     @id @default(uuid())
+  date   DateTime   @default(now())
+  status STATUSTYPE @default(pending)
+
+  cancellation_policy Cancellation?
+
+  PaymentSchedule PaymentSchedule[]
+
+  client_email String
+  client       Client @relation(fields: [client_email], references: [email])
+
+  event_id String @unique
+  event    Event  @relation(fields: [event_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Cancellation {
+  id String @id @default(uuid())
+
+  refund_policy     REFUNDPOLICY
+  notice_days       Int
+  percentage_of_fee Float
+  specified_by      POLICYSPECIFIER
+
+  contract_id String   @unique
+  contract    Contract @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum POLICYSPECIFIER {
+  client
+  vendor
+}
+
+enum REFUNDPOLICY {
+  refundable
+  non_refundable
 }
 
 enum PROSPECTSTATUSTYPE {

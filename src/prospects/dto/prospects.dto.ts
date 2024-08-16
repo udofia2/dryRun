@@ -1,10 +1,12 @@
+import { Type } from "class-transformer";
 import {
   IsNotEmpty,
   IsString,
   IsNumber,
   IsOptional,
-  IsEmail
+  ValidateNested
 } from "class-validator";
+import { CreateClientDto } from "src/common/dtos";
 
 class Activity {
   @IsString()
@@ -59,20 +61,6 @@ export class Specification {
   provisions: Provision[];
 }
 
-export class Client {
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  type: string;
-
-  @IsString()
-  name: string;
-
-  @IsString()
-  phone_number: string;
-}
-
 export class Event {
   @IsString()
   name: string;
@@ -108,7 +96,9 @@ export class CreateProspectDto {
   specification: Specification;
 
   @IsNotEmpty()
-  client: Client;
+  @ValidateNested()
+  @Type(() => CreateClientDto)
+  client: CreateClientDto;
 
   @IsNotEmpty()
   event: Event;

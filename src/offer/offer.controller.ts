@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req,
   Query
 } from "@nestjs/common";
 import { OfferService } from "./offer.service";

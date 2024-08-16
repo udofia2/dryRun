@@ -6,7 +6,8 @@ import {
   IsOptional,
   IsString
 } from "class-validator";
-import { Client, Specification, Event } from "src/prospects/dto";
+import { CreateClientDto } from "src/common/dtos";
+import { Specification, Event } from "src/prospects/dto";
 
 class PaymentStructure {
   @IsNotEmpty()
@@ -30,7 +31,7 @@ export class CreateOfferDto {
   specification: Specification;
 
   @IsNotEmpty()
-  client: Client;
+  client: CreateClientDto;
 
   @IsNotEmpty()
   event: Event;

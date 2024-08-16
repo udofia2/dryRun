@@ -1,10 +1,16 @@
-import { IsString, IsNotEmpty, IsOptional, isNotEmpty } from "class-validator";
+import { Type } from "class-transformer";
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  ValidateNested
+} from "class-validator";
+import { SpecificationDto } from "src/common/dtos";
 import { EntryPass } from "src/constants";
-import { Specification } from "src/prospects/dto";
 
 export class CreateEventDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   name: string;
 
   @IsString()
@@ -16,8 +22,12 @@ export class CreateEventDto {
   type: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   link: string;
+
+  @IsNumber()
+  @IsOptional()
+  number_of_guests: number;
 
   @IsString()
   @IsOptional()
@@ -32,8 +42,12 @@ export class CreateEventDto {
   state: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   location_type: string;
+
+  @IsString()
+  @IsOptional()
+  location: string;
 
   @IsString()
   @IsOptional()
@@ -44,18 +58,23 @@ export class CreateEventDto {
   location_address: string;
 
   @IsString()
+  @IsOptional()
   schedule_type: string;
 
   @IsString()
+  @IsOptional()
   start_date: Date;
 
   @IsString()
+  @IsOptional()
   start_time: string;
 
   @IsString()
+  @IsOptional()
   end_date: Date;
 
   @IsString()
+  @IsOptional()
   end_time: string;
 
   @IsString()
@@ -95,8 +114,10 @@ export class CreateEventDto {
   prospect_id: string;
 
   @IsOptional()
-  specification: Specification;
+  @ValidateNested()
+  @Type(() => SpecificationDto)
+  specification: SpecificationDto;
 
-  @IsNotEmpty()
+  @IsOptional()
   entry_passes: EntryPass[];
 }

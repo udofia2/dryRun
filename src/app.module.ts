@@ -10,6 +10,7 @@ import { ProspectsModule } from "./prospects/prospects.module";
 import { OfferModule } from "./offer/offer.module";
 import { EventsModule } from "./events/events.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { ContractsModule } from "./contracts/contracts.module";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -29,7 +30,8 @@ import { NotificationsModule } from "./notifications/notifications.module";
     ProspectsModule,
     OfferModule,
     EventsModule,
-    NotificationsModule
+    NotificationsModule,
+    ContractsModule
   ],
   controllers: [AppController],
   providers: [AppService]
