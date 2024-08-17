@@ -43,7 +43,6 @@ export class AuthService {
     const userExists = await this.db.user.findUnique({
       where: { email: dto.email }
     });
-    console.log("userExists", userExists);
     if (userExists) {
       throw new ForbiddenException("User already exists. Please login");
     }
@@ -78,8 +77,6 @@ export class AuthService {
     const user = await this.db.user.findUnique({
       where: { email: dto.email }
     });
-
-    console.log("user", user);
 
     if (!user) {
       throw new ForbiddenException("Invalid email or password");

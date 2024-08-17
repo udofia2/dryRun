@@ -293,6 +293,11 @@ model Contract {
   date   DateTime   @default(now())
   status STATUSTYPE @default(pending)
 
+  confidentiality                String @default("This agreement constitutes the entire agreement between the parties are commercial secrets and guarantees to not disclose such information to others without correct authorization.")
+  indemnification                String @default("This Client agrees to indemnify and hold the event exhibitor harmless from any claims, liabilities, damages, or expenses arising out of or related to the scope of service, excluding those caused by the exhibitor’s negligence or willful misconduct.")
+  photography_and_publicity_laws String @default("The client would allow the exhibitor to take pictures with consent for their brand publicity.")
+  entire_agreement               String @default("This agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, understandings, and agreements between the parties.")
+
   cancellation_policy Cancellation?
 
   PaymentSchedule PaymentSchedule[]
@@ -322,49 +327,58 @@ model Cancellation {
   updated_at DateTime @updatedAt
 }
 
+/// Policy specifier types - client, vendor
 enum POLICYSPECIFIER {
   client
   vendor
 }
 
+/// Refund policy types - refundable, non_refundable
 enum REFUNDPOLICY {
   refundable
   non_refundable
 }
 
+/// Prospect status types - pending, converted, rejected
 enum PROSPECTSTATUSTYPE {
   pending
   converted
   rejected
 }
 
+/// The default status types of models - pending, accepted, rejected
 enum STATUSTYPE {
   pending
   accepted
   rejected
 }
 
+/// Ticket types - free, paid
 enum TICKETTYPE {
   free
   paid
 }
 
+/// Stock types - unlimited, limited
 enum STOCKTYPE {
   unlimited
   limited
 }
 
+/// Entry pass types - free, paid, invite_only
 enum ENTRYPASSTYPE {
   free
   paid
   invite_only
 }
 
+/// Schedule types - one_time, recurring
 enum SCHEDULETYPE {
   one_time
   recurring
 }
 
+/// User types - host, exhibitor
 enum USERTYPE {
   host
   exhibitor
@@ -396,6 +410,7 @@ enum EXHIBITTYPE {
   social_media_influencer
 }
 
+/// Prospect types - host, exhibitor
 enum PROSPECTTYPE {
   host
   exhibitor

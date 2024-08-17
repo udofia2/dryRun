@@ -27,7 +27,6 @@ export class AuthController {
   @HttpCode(201)
   @Post("signup")
   register(@Body() dto: CreateAuthDto) {
-    console.log("signup dto", dto);
     return this.authService.register(dto);
   }
 
