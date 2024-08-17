@@ -6,15 +6,19 @@ import {
   LOCATIONTYPE,
   OFFER_ACCEPTED,
   OFFER_CREATED,
-  OFFERSTATUSTYPE,
   STATUSTYPE
 } from "src/constants";
 import { PAYMENTSTRUCTURE, User } from "@prisma/client";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
+import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/notifications/notifications.service";
 
 @Injectable()
 export class OfferService {
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private readonly notificationsService: NotificationsService
+  ) {}
 
   /**
    * CREATE STANDALONE OFFER
@@ -111,13 +115,12 @@ export class OfferService {
       });
 
       // CREATE NOTIFICATION
-      await tx.notification.create({
-        data: {
-          feature: "offer",
-          message: `${OFFER_CREATED} - ${offer.event.client.name}`,
-          user_id: user.id
-        }
-      });
+      const newNotification: CreateNotificationDto = {
+        feature: "offer",
+        message: `${OFFER_CREATED} - ${offer.event.client.name}`,
+        user_id: user.id
+      };
+      await this.notificationsService.create(newNotification, tx);
 
       return {
         success: true,

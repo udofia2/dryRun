@@ -10,10 +10,15 @@ import {
 } from "src/constants";
 import { UpdateProspectsDto } from "./dto/update-prospects.dto";
 import { User } from "@prisma/client";
+import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/notifications/notifications.service";
 
 @Injectable()
 export class ProspectsService {
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private readonly notificationsService: NotificationsService
+  ) {}
 
   async create(dto: CreateProspectDto, user: User) {
     return this.db.$transaction(async (tx) => {
@@ -87,6 +92,14 @@ export class ProspectsService {
       await tx.provision.createMany({ data: provisions });
       await tx.activity.createMany({ data: activities });
 
+      // CREATE NOTIFICATION
+      const newNotification: CreateNotificationDto = {
+        feature: "prospect",
+        message: `${PROSPECT_CREATED} - ${dto.client.name}`,
+        user_id: user.id
+      };
+      await this.notificationsService.create(newNotification, tx);
+
       prospect = await tx.prospect.findUnique({
         where: { id: prospect.id },
         include: {
@@ -101,14 +114,6 @@ export class ProspectsService {
               }
             }
           }
-        }
-      });
-
-      await tx.notification.create({
-        data: {
-          feature: "prospect",
-          message: `${PROSPECT_CREATED} - ${dto.client.name}`,
-          user_id: user.id
         }
       });
 
