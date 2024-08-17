@@ -5,12 +5,16 @@ import { DatabaseService } from "src/database/database.service";
 import { EventsService } from "src/events/events.service";
 import { Prisma, User } from "@prisma/client";
 import { QueryContractDto } from "./dtos/query-contract.dto";
+import { NotificationsService } from "src/notifications/notifications.service";
+import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
+import { CONTRACT_CREATED } from "src/constants";
 
 @Injectable()
 export class ContractsService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly eventsService: EventsService
+    private readonly eventsService: EventsService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   async create(dto: CreateContractDto, user: User) {
@@ -24,7 +28,7 @@ export class ContractsService {
         );
 
         // CREATE CONTRACT
-        return tx.contract.create({
+        const contract = tx.contract.create({
           data: {
             client: {
               connectOrCreate: {
@@ -42,6 +46,16 @@ export class ContractsService {
           },
           include: { client: true, event: true, cancellation_policy: true }
         });
+
+        // CREATE NOTIFICATION
+        const newNotification: CreateNotificationDto = {
+          feature: "contract",
+          message: `${CONTRACT_CREATED} - ${dto.client.name}`,
+          user_id: user.id
+        };
+        await this.notificationsService.create(newNotification, tx);
+
+        return contract;
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable
