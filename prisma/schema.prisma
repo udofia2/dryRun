@@ -66,7 +66,7 @@ model Offer {
   payment_structure PaymentStructure?
 
   event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
   exhibitor_id String
   exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
@@ -169,7 +169,7 @@ model Event {
   client       Client? @relation(fields: [client_email], references: [email])
 
   prospect_id String?   @unique
-  prospect    Prospect? @relation(fields: [prospect_id], references: [id])
+  prospect    Prospect? @relation(fields: [prospect_id], references: [id], onDelete: Cascade)
 
   specification Specification?
 
@@ -191,7 +191,7 @@ model Specification {
   activities Activity[]
 
   event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -211,7 +211,7 @@ model Provision {
   vendor_name String? // TODO: Isn't it same as exhibitor_name?
 
   specification_id String
-  specification    Specification @relation(fields: [specification_id], references: [id])
+  specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -232,7 +232,7 @@ model Activity {
   vendor_name String?
 
   specification_id String
-  specification    Specification @relation(fields: [specification_id], references: [id])
+  specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -254,7 +254,7 @@ model EntryPass {
   invite Invite?
 
   event_id String
-  event    Event  @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -306,7 +306,7 @@ model Contract {
   client       Client @relation(fields: [client_email], references: [email])
 
   event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id])
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

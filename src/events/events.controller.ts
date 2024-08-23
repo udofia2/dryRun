@@ -37,11 +37,11 @@ export class EventsController {
 
   @Patch(":id")
   update(@Param("id") id: string, @Body() dto: UpdateEventDto) {
-    return this.eventsService.update(+id, dto);
+    return this.eventsService.update(id, dto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.eventsService.remove(+id);
+  remove(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.eventsService.remove(id, user);
   }
 }

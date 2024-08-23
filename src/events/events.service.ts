@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto";
 import { DatabaseService } from "src/database/database.service";
@@ -142,7 +142,20 @@ export class EventsService {
 
   async findAll(user: User) {
     const events = await this.db.event.findMany({
-      where: { exhibitor_id: user.id }
+      where: { exhibitor_id: user.id },
+      include: {
+        specification: {
+          include: {
+            activities: true,
+            provisions: true
+          }
+        },
+        entry_passes: {
+          include: {
+            invite: true
+          }
+        }
+      }
     });
     return {
       success: true,
@@ -176,11 +189,21 @@ export class EventsService {
     };
   }
 
-  update(id: number, updateEventDto: UpdateEventDto) {
+  update(id: string, updateEventDto: UpdateEventDto) {
     return `This action updates a #${id} event`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} event`;
+  async remove(id: string, user: User) {
+    const event = await this.db.event.delete({
+      where: { id, exhibitor_id: user.id }
+    });
+    if (!event) {
+      throw new ForbiddenException("Event not found");
+    }
+    return {
+      success: true,
+      message: "Event deleted successfully",
+      data: event
+    };
   }
 }
