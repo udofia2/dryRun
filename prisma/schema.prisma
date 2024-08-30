@@ -41,7 +41,7 @@ model User {
 model Prospect {
   id     String             @id @default(uuid())
   date   DateTime           @default(now())
-  source String
+  source EVENTSOURCE
   status PROSPECTSTATUSTYPE @default(pending)
 
   client_email String
@@ -49,8 +49,8 @@ model Prospect {
 
   event Event?
 
-  exhibitor_id String
-  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
+  vendor_id String
+  vendor    User   @relation(fields: [vendor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -68,8 +68,8 @@ model Offer {
   event_id String @unique
   event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
-  exhibitor_id String
-  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
+  vendor_id String
+  vendor    User   @relation(fields: [vendor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -162,8 +162,8 @@ model Event {
   website_link   String?
   cover_art_url  String?
 
-  exhibitor_id String
-  exhibitor    User   @relation(fields: [exhibitor_id], references: [id])
+  vendor_id String
+  vendor    User   @relation(fields: [vendor_id], references: [id])
 
   client_email String?
   client       Client? @relation(fields: [client_email], references: [email])
@@ -202,13 +202,11 @@ model Provision {
   provision   String
   description String
 
-  exhibitor_name String?
-  start_date     DateTime
-  end_date       DateTime
+  vendor_name String?
+  start_date  DateTime
+  end_date    DateTime
 
   amount Float
-
-  vendor_name String? // TODO: Isn't it same as exhibitor_name?
 
   specification_id String
   specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
@@ -222,14 +220,12 @@ model Activity {
   title       String
   description String
 
-  exhibitor_name String?
+  vendor_name String?
 
   start_date DateTime
   end_date   DateTime
 
   amount Float
-
-  vendor_name String?
 
   specification_id String
   specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
@@ -270,7 +266,7 @@ model Invite {
   message String
 
   entry_pass_id String    @unique
-  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -294,8 +290,8 @@ model Contract {
   status STATUSTYPE @default(pending)
 
   confidentiality                String @default("This agreement constitutes the entire agreement between the parties are commercial secrets and guarantees to not disclose such information to others without correct authorization.")
-  indemnification                String @default("This Client agrees to indemnify and hold the event exhibitor harmless from any claims, liabilities, damages, or expenses arising out of or related to the scope of service, excluding those caused by the exhibitor’s negligence or willful misconduct.")
-  photography_and_publicity_laws String @default("The client would allow the exhibitor to take pictures with consent for their brand publicity.")
+  indemnification                String @default("This Client agrees to indemnify and hold the event vendor harmless from any claims, liabilities, damages, or expenses arising out of or related to the scope of service, excluding those caused by the vendor’s negligence or willful misconduct.")
+  photography_and_publicity_laws String @default("The client would allow the vendor to take pictures with consent for their brand publicity.")
   entire_agreement               String @default("This agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, understandings, and agreements between the parties.")
 
   cancellation_policy Cancellation?
@@ -346,6 +342,12 @@ enum PROSPECTSTATUSTYPE {
   rejected
 }
 
+/// Event source types - offline, online
+enum EVENTSOURCE {
+  offline
+  online
+}
+
 /// The default status types of models - pending, accepted, rejected
 enum STATUSTYPE {
   pending
@@ -378,10 +380,10 @@ enum SCHEDULETYPE {
   recurring
 }
 
-/// User types - host, exhibitor
+/// User types - host, vendor
 enum USERTYPE {
   host
-  exhibitor
+  vendor
 }
 
 enum EXHIBITTYPE {
@@ -410,8 +412,8 @@ enum EXHIBITTYPE {
   social_media_influencer
 }
 
-/// Prospect types - host, exhibitor
+/// Prospect types - host, vendor
 enum PROSPECTTYPE {
   host
-  exhibitor
+  vendor
 }

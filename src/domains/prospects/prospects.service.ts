@@ -5,13 +5,12 @@ import {
   CLIENTTYPE,
   LOCATIONTYPE,
   PROSPECT_CONVERSION,
-  PROSPECT_CREATED,
-  SOURCETYPE
+  PROSPECT_CREATED
 } from "src/constants";
 import { UpdateProspectsDto } from "./dto/update-prospects.dto";
-import { User } from "@prisma/client";
-import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
-import { NotificationsService } from "src/notifications/notifications.service";
+import { EVENTSOURCE, User } from "@prisma/client";
+import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/domains/notifications/notifications.service";
 
 @Injectable()
 export class ProspectsService {
@@ -27,8 +26,8 @@ export class ProspectsService {
       // CREATE PROSPECT
       let prospect = await tx.prospect.create({
         data: {
-          source: SOURCETYPE[source.toLowerCase()],
-          exhibitor: { connect: { id: user.id } },
+          source: EVENTSOURCE[source.toLowerCase()],
+          vendor: { connect: { id: user.id } },
           client: {
             connectOrCreate: {
               where: { email: dto.client.email },
@@ -57,7 +56,7 @@ export class ProspectsService {
               dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
             ],
           location_address: dto.event.location_address ?? undefined,
-          exhibitor_id: user.id,
+          vendor_id: user.id,
           client_email: dto.client.email,
           prospect_id: prospect.id
         }
@@ -117,11 +116,7 @@ export class ProspectsService {
         }
       });
 
-      return {
-        success: true,
-        message: "Prospect created successfully",
-        data: prospect
-      };
+      return prospect;
     });
   }
 
@@ -132,16 +127,12 @@ export class ProspectsService {
    */
   async findAll(user: User) {
     const prospects = await this.db.prospect.findMany({
-      where: { exhibitor_id: user.id },
+      where: { vendor_id: user.id },
       include: {
         client: true
       }
     });
-    return {
-      success: true,
-      message: "Prospects retrieved successfully",
-      data: prospects
-    };
+    return prospects;
   }
 
   /**
@@ -152,7 +143,7 @@ export class ProspectsService {
    */
   async findOne(id: string, user: User) {
     const prospect = await this.db.prospect.findUnique({
-      where: { id, exhibitor_id: user.id },
+      where: { id, vendor_id: user.id },
       include: {
         client: true,
         event: {
@@ -168,23 +159,15 @@ export class ProspectsService {
       }
     });
 
-    return {
-      success: true,
-      message: "Prospect retrieved successfully",
-      data: prospect
-    };
+    return prospect;
   }
 
   async filter(source: string) {
     const prospects = await this.db.prospect.findMany({
-      where: { source: SOURCETYPE[source.toLowerCase()] }
+      where: { source: EVENTSOURCE[source.toLowerCase()] }
     });
 
-    return {
-      success: true,
-      message: "Prospects retrieved successfully",
-      data: prospects
-    };
+    return prospects;
   }
 
   /**
@@ -202,7 +185,7 @@ export class ProspectsService {
     });
 
     if (prospect) {
-      if (prospect.exhibitor_id !== user.id) {
+      if (prospect.vendor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized!");
       }
     }
@@ -216,11 +199,7 @@ export class ProspectsService {
       }
     });
 
-    return {
-      success: true,
-      message: "Prospect updated successfully",
-      data: prospect
-    };
+    return prospect;
   }
 
   /**
@@ -235,7 +214,7 @@ export class ProspectsService {
     });
 
     if (prospect) {
-      if (prospect.exhibitor_id !== user.id) {
+      if (prospect.vendor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized!");
       }
     }
@@ -244,10 +223,6 @@ export class ProspectsService {
       where: { id }
     });
 
-    return {
-      success: true,
-      message: "Prospect deleted successfully!",
-      data: prospect
-    };
+    return prospect;
   }
 }

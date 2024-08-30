@@ -31,6 +31,8 @@ export enum OFFERSTATUSTYPE {
   "rejected" = "Rejected"
 }
 
+export type EVENTSOURCE = "offline" | "online";
+
 export class EntryPass {
   @IsString()
   name: string;

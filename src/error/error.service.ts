@@ -2,14 +2,18 @@ import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  HttpException
+  HttpException,
+  HttpStatus,
+  Logger
 } from "@nestjs/common";
 import { JsonWebTokenError } from "@nestjs/jwt";
+import { PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import { NODE_ENV } from "src/constants";
 
 @Catch(HttpException, Error)
 export class ErrorService implements ExceptionFilter {
+  logger = new Logger("Exception");
   constructor() {}
 
   catch(exception: HttpException | unknown, host: ArgumentsHost) {
@@ -17,8 +21,8 @@ export class ErrorService implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status: number | undefined;
-    let message = "Internal server error!";
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message: any = "Internal server error!";
     let stackTrace: string | undefined;
 
     if (exception instanceof HttpException) {
@@ -27,36 +31,36 @@ export class ErrorService implements ExceptionFilter {
       stackTrace = exception.stack;
     } else if (exception instanceof JsonWebTokenError) {
       status = 401;
+    } else if (exception instanceof PrismaClientValidationError) {
+      message = "Invalid Input!";
     }
 
     if (exception instanceof Error) {
-      message = exception.message;
       stackTrace = exception.stack;
     }
 
     if (NODE_ENV === "development") {
-      console.log(exception);
+      console.log(exception, stackTrace);
       status = status || 500;
-      response.status(status).json({
-        statusCode: status,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-        message,
-        stackTrace
-      });
     } else if (NODE_ENV === "production") {
       console.log(exception);
       if (!status) {
-        return response.status(500).json({
-          statusCode: 500,
-          message: "Something went wrong!"
-        });
-      } else {
-        return response.status(status).json({
-          statusCode: status,
-          message
-        });
+        message = "Something went wrong!";
       }
     }
+
+    this.logger.error(
+      `${request.method} ${request.url} ${status} - error: ${
+        typeof message === "object" ? message.message : message
+      }`
+    );
+
+    return response.status(status).json({
+      success: false,
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      data: { message: message["message"] || message }
+    });
   }
 }

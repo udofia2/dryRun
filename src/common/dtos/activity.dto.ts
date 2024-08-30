@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class ActivityDto {
   @IsString()
@@ -7,19 +7,16 @@ export class ActivityDto {
   @IsString()
   description: string;
 
-  @IsString()
-  @IsOptional()
-  exhibitor_name: string;
-
-  @IsString()
+  @IsDateString({ strict: true })
   start_date: Date;
 
-  @IsString()
+  @IsDateString({ strict: true })
   end_date: Date;
 
   @IsNumber()
   amount: number;
 
   @IsString()
+  @IsOptional()
   vendor_name: string;
 }

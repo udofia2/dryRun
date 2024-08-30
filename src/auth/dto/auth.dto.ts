@@ -30,7 +30,7 @@ export class CreateAuthDto {
   @IsNotEmpty()
   type: USERTYPE;
 
-  @UserTypeMustBe("exhibitor")
+  @UserTypeMustBe("vendor")
   exhibit: EXHIBITTYPE;
 }
 

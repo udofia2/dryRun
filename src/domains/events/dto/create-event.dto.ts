@@ -3,7 +3,8 @@ import {
   IsString,
   IsOptional,
   IsNumber,
-  ValidateNested
+  ValidateNested,
+  IsDateString
 } from "class-validator";
 import { SpecificationDto } from "src/common/dtos";
 import { EntryPass } from "src/constants";
@@ -13,8 +14,8 @@ export class CreateEventDto {
   @IsOptional()
   name: string;
 
-  @IsString()
   @IsOptional()
+  @IsDateString({ strict: true })
   date: Date;
 
   @IsString()
@@ -61,16 +62,16 @@ export class CreateEventDto {
   @IsOptional()
   schedule_type: string;
 
-  @IsString()
   @IsOptional()
+  @IsDateString({ strict: true })
   start_date: Date;
 
   @IsString()
   @IsOptional()
   start_time: string;
 
-  @IsString()
   @IsOptional()
+  @IsDateString({ strict: true })
   end_date: Date;
 
   @IsString()
@@ -103,7 +104,7 @@ export class CreateEventDto {
 
   @IsString()
   @IsOptional()
-  exhibitor_id: string;
+  vendor_id: string;
 
   @IsString()
   @IsOptional()

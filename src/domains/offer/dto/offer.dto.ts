@@ -7,7 +7,7 @@ import {
   IsString
 } from "class-validator";
 import { CreateClientDto } from "src/common/dtos";
-import { Specification, Event } from "src/prospects/dto";
+import { Specification, Event } from "src/domains/prospects/dto";
 
 class PaymentStructure {
   @IsNotEmpty()

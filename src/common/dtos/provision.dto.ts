@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString
+} from "class-validator";
 
 export class ProvisionDto {
   @IsNotEmpty()
@@ -8,13 +14,10 @@ export class ProvisionDto {
   @IsString()
   description: string;
 
-  @IsString()
-  exhibitor_name: string;
-
-  @IsString()
+  @IsDateString({ strict: true })
   start_date: Date;
 
-  @IsString()
+  @IsDateString({ strict: true })
   end_date: Date;
 
   @IsNotEmpty()

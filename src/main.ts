@@ -7,6 +7,7 @@ import { SwaggerModule } from "@nestjs/swagger";
 import { configs, options } from "./common/helpers";
 import { LoggerMiddleware } from "./common/middlewares/logger.middleware";
 import { Logger } from "@nestjs/common";
+import { ResponseFormatInterceptor } from "./common/interceptors";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,8 @@ async function bootstrap() {
   const globalPrefix = "api";
   app.setGlobalPrefix(globalPrefix);
   app.useGlobalFilters(new ErrorService());
+  app.useGlobalInterceptors(new ResponseFormatInterceptor());
+
   app.useGlobalPipes(new AppValidationPipe());
 
   app.use(new LoggerMiddleware().use);

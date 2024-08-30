@@ -26,11 +26,7 @@ export class EventsService {
       }
     );
 
-    return {
-      status: "success",
-      message: "Event created successfully",
-      data: event
-    };
+    return event;
   }
 
   public async createNewEvent(dto: CreateEventDto, user: User, tx: any) {
@@ -59,7 +55,7 @@ export class EventsService {
         x_link: dto.x_link ?? undefined,
         website_link: dto.website_link ?? undefined,
         cover_art_url: dto.cover_art_url ?? undefined,
-        exhibitor_id: user.id
+        vendor_id: user.id
       }
     });
 
@@ -142,7 +138,7 @@ export class EventsService {
 
   async findAll(user: User) {
     const events = await this.db.event.findMany({
-      where: { exhibitor_id: user.id },
+      where: { vendor_id: user.id },
       include: {
         specification: {
           include: {
@@ -157,16 +153,12 @@ export class EventsService {
         }
       }
     });
-    return {
-      success: true,
-      message: "Events retrieved successfully",
-      data: events
-    };
+    return events;
   }
 
   async findOne(id: string, user: User) {
     const event = await this.db.event.findUnique({
-      where: { id, exhibitor_id: user.id },
+      where: { id, vendor_id: user.id },
       include: {
         specification: {
           include: {
@@ -182,11 +174,7 @@ export class EventsService {
       }
     });
 
-    return {
-      success: true,
-      message: "Event retrieved successfully",
-      data: event
-    };
+    return event;
   }
 
   update(id: string, updateEventDto: UpdateEventDto) {
@@ -195,15 +183,11 @@ export class EventsService {
 
   async remove(id: string, user: User) {
     const event = await this.db.event.delete({
-      where: { id, exhibitor_id: user.id }
+      where: { id, vendor_id: user.id }
     });
     if (!event) {
       throw new ForbiddenException("Event not found");
     }
-    return {
-      success: true,
-      message: "Event deleted successfully",
-      data: event
-    };
+    return event;
   }
 }

@@ -4,7 +4,7 @@ import { DatabaseService } from "src/database/database.service";
 import { User } from "@prisma/client";
 
 @Injectable()
-export class ExhibitorGuard implements CanActivate {
+export class VendorGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly db: DatabaseService
@@ -29,6 +29,6 @@ export class ExhibitorGuard implements CanActivate {
       return false;
     }
 
-    return resource.event.exhibitor_id === user.id;
+    return resource.event.vendor_id === user.id;
   }
 }

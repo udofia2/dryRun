@@ -47,7 +47,7 @@ export class AuthService {
       throw new ForbiddenException("User already exists. Please login");
     }
 
-    if (dto.type === "exhibitor" && !ExhibitType.has(dto.exhibit)) {
+    if (dto.type === "vendor" && !ExhibitType.has(dto.exhibit)) {
       throw new ForbiddenException("Invalid exhibit type");
     }
 
@@ -62,12 +62,8 @@ export class AuthService {
     const token = await this.signToken(user);
 
     return {
-      success: true,
-      message: "User created successfully",
-      data: {
-        ...user,
-        ...token
-      }
+      user,
+      tokens: token
     };
   }
 
@@ -92,12 +88,8 @@ export class AuthService {
     const token = await this.signToken(user);
 
     return {
-      success: true,
-      message: "User logged in successfully",
-      data: {
-        ...user,
-        ...token
-      }
+      user,
+      tokens: token
     };
   }
 
@@ -117,12 +109,11 @@ export class AuthService {
     delete payload.exp;
 
     // SIGN NEW ACCESS TOKEN
-    const access_token = await this.jwt.signAsync(payload, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-      secret: ACCESS_TOKEN_SECRET
-    });
+    const access_token = await this.signAccessToken(payload);
+    // SIGN NEW REFRESH TOKEN
+    const refresh_token = await this.signRefreshToken(payload);
 
-    return { status: "success", access_token };
+    return { access_token, refresh_token };
   }
 
   private async signToken(
@@ -137,15 +128,36 @@ export class AuthService {
       type: user.type
     };
 
-    const access_token = await this.jwt.signAsync(payload, {
+    // SIGN ACCESS TOKEN
+    const access_token = await this.signAccessToken(payload);
+    // SIGN REFRESH TOKEN
+    const refresh_token = await this.signRefreshToken(payload);
+
+    return { access_token, refresh_token };
+  }
+
+  /**
+   * SIGN ACCESS TOKEN
+   * @param payload
+   * @returns {Promise<string>} - Access token
+   */
+  async signAccessToken(payload: any) {
+    return await this.jwt.signAsync(payload, {
       expiresIn: ACCESS_TOKEN_EXPIRY,
       secret: ACCESS_TOKEN_SECRET
     });
-    const refresh_token = await this.jwt.signAsync(payload, {
+  }
+
+  /**
+   * SIGN REFRESH TOKEN
+   * @param payload
+   * @returns {Promise<string>} - Refresh token
+   */
+  async signRefreshToken(payload: any) {
+    return await this.jwt.signAsync(payload, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
       secret: REFRESH_TOKEN_SECRET
     });
-    return { access_token, refresh_token };
   }
 
   async forgotPassword({ email }: ForgotPasswordDto): Promise<any> {
@@ -160,7 +172,6 @@ export class AuthService {
     await this.otpService.sendOtpViaEmail(email);
 
     return {
-      status: "success",
       message: `OTP sent to ${email}`
     };
   }
@@ -177,7 +188,6 @@ export class AuthService {
       throw new BadRequestException(verificationResult.message);
     }
     return {
-      status: "success",
       message: "OTP verified successfully"
     };
   }
@@ -191,7 +201,6 @@ export class AuthService {
     });
 
     return {
-      status: "success",
       message: "Password reset successfully"
     };
   }

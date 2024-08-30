@@ -1,12 +1,11 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsDateString, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class PaymentScheduleDto {
   @IsNotEmpty()
   @IsString()
   title_of_deliverable: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @IsDateString({ strict: true })
   due_date: Date;
 
   @IsNotEmpty()

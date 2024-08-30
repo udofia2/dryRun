@@ -15,7 +15,7 @@ import { UpdateContractDto } from "./dtos/update-contract.dto";
 import { CurrentUser, ResourceModel } from "src/common/decorators";
 import { User } from "@prisma/client";
 import { AuthGuard } from "src/auth/guard";
-import { ExhibitorGuard } from "src/common/guards";
+import { VendorGuard } from "src/common/guards";
 import { QueryContractDto } from "./dtos/query-contract.dto";
 
 @Controller("contracts")
@@ -40,14 +40,14 @@ export class ContractsController {
 
   @Patch(":id")
   @ResourceModel("contract")
-  @UseGuards(ExhibitorGuard)
+  @UseGuards(VendorGuard)
   update(@Param("id") id: string, @Body() dto: UpdateContractDto) {
     return this.contractsService.update(id, dto);
   }
 
   @Delete(":id")
   @ResourceModel("contract")
-  @UseGuards(ExhibitorGuard)
+  @UseGuards(VendorGuard)
   remove(@Param("id") id: string) {
     return this.contractsService.remove(id);
   }

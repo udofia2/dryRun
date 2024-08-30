@@ -10,8 +10,8 @@ import {
 } from "src/constants";
 import { PAYMENTSTRUCTURE, User } from "@prisma/client";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
-import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
-import { NotificationsService } from "src/notifications/notifications.service";
+import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/domains/notifications/notifications.service";
 
 @Injectable()
 export class OfferService {
@@ -42,7 +42,7 @@ export class OfferService {
               dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
             ],
           location_address: dto.event.location_address ?? undefined,
-          exhibitor: { connect: { id: user.id } },
+          vendor: { connect: { id: user.id } },
           client: {
             connectOrCreate: {
               where: { email: dto.client.email },
@@ -88,7 +88,7 @@ export class OfferService {
 
       const offer = await tx.offer.create({
         data: {
-          exhibitor: { connect: { id: user.id } },
+          vendor: { connect: { id: user.id } },
           payment_structure: {
             create: {
               structure:
@@ -122,11 +122,7 @@ export class OfferService {
       };
       await this.notificationsService.create(newNotification, tx);
 
-      return {
-        success: true,
-        message: "Offer created successfully",
-        data: offer
-      };
+      return offer;
     });
   }
 
@@ -140,32 +136,24 @@ export class OfferService {
     const offers = await this.db.offer.findMany({
       where: {
         status: STATUSTYPE[status.toLowerCase()],
-        exhibitor_id: user.id
+        vendor_id: user.id
       }
     });
 
-    return {
-      success: true,
-      message: "Offers retrieved successfully",
-      data: offers
-    };
+    return offers;
   }
 
   /**
-   * FIND ALL EXHIBITOR'S OFFERS
+   * FIND ALL vendor'S OFFERS
    * @param {User} user
    * @returns
    */
   async findAll(user: User) {
     const offers = await this.db.offer.findMany({
-      where: { exhibitor_id: user.id }
+      where: { vendor_id: user.id }
     });
 
-    return {
-      success: true,
-      message: "Offers retrieved successfully",
-      data: offers
-    };
+    return offers;
   }
 
   /**
@@ -176,14 +164,10 @@ export class OfferService {
    */
   async findById(id: string, user: User) {
     const offer = await this.db.offer.findUnique({
-      where: { id, exhibitor_id: user.id }
+      where: { id, vendor_id: user.id }
     });
 
-    return {
-      success: true,
-      message: "Offer retrieved successfully",
-      data: offer
-    };
+    return offer;
   }
 
   /**
@@ -202,7 +186,7 @@ export class OfferService {
     });
 
     if (offer) {
-      if (offer.exhibitor_id !== user.id) {
+      if (offer.vendor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized access to offer!");
       }
     }
@@ -216,11 +200,7 @@ export class OfferService {
       }
     });
 
-    return {
-      success: true,
-      message: "Offer status updated successfully",
-      data: offer
-    };
+    return offer;
   }
 
   /**
@@ -235,7 +215,7 @@ export class OfferService {
     });
 
     if (offer) {
-      if (offer.exhibitor_id !== user.id) {
+      if (offer.vendor_id !== user.id) {
         throw new UnauthorizedException("Unauthorized!");
       }
     }
@@ -244,10 +224,6 @@ export class OfferService {
       where: { id }
     });
 
-    return {
-      success: true,
-      message: "offer deleted successfully!",
-      data: offer
-    };
+    return offer;
   }
 }

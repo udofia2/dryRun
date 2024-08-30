@@ -5,7 +5,7 @@ import {
   CreateClientDto,
   PaymentScheduleDto
 } from "src/common/dtos";
-import { CreateEventDto } from "src/events/dto";
+import { CreateEventDto } from "src/domains/events/dto";
 
 export class CreateContractDto {
   @IsNotEmptyObject()

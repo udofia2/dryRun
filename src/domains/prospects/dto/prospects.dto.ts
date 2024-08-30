@@ -4,9 +4,11 @@ import {
   IsString,
   IsNumber,
   IsOptional,
-  ValidateNested
+  ValidateNested,
+  IsDateString
 } from "class-validator";
 import { CreateClientDto } from "src/common/dtos";
+import { EVENTSOURCE } from "@prisma/client";
 
 class Activity {
   @IsString()
@@ -17,12 +19,12 @@ class Activity {
 
   @IsString()
   @IsOptional()
-  exhibitor_name: string;
+  vendor_name: string;
 
-  @IsString()
+  @IsDateString({ strict: true })
   start_date: Date;
 
-  @IsString()
+  @IsDateString({ strict: true })
   end_date: Date;
 
   @IsNumber()
@@ -37,12 +39,12 @@ class Provision {
   description: string;
 
   @IsString()
-  exhibitor_name: string;
+  vendor_name: string;
 
-  @IsString()
+  @IsDateString({ strict: true })
   start_date: Date;
 
-  @IsString()
+  @IsDateString({ strict: true })
   end_date: Date;
 
   @IsNumber()
@@ -55,9 +57,13 @@ export class Specification {
   theme: string;
 
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => Activity)
   activities: Activity[];
 
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => Provision)
   provisions: Provision[];
 }
 
@@ -89,10 +95,11 @@ export class Event {
 
 export class CreateProspectDto {
   @IsString()
-  @IsNotEmpty()
-  source: string;
+  source: EVENTSOURCE;
 
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => Specification)
   specification: Specification;
 
   @IsNotEmpty()

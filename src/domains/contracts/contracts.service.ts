@@ -2,11 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { CreateContractDto } from "./dtos/create-contract.dto";
 import { UpdateContractDto } from "./dtos/update-contract.dto";
 import { DatabaseService } from "src/database/database.service";
-import { EventsService } from "src/events/events.service";
+import { EventsService } from "src/domains/events/events.service";
 import { Prisma, User } from "@prisma/client";
 import { QueryContractDto } from "./dtos/query-contract.dto";
-import { NotificationsService } from "src/notifications/notifications.service";
-import { CreateNotificationDto } from "src/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/domains/notifications/notifications.service";
+import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
 import { CONTRACT_CREATED } from "src/constants";
 
 @Injectable()
@@ -62,11 +62,7 @@ export class ContractsService {
       }
     );
 
-    return {
-      status: "success",
-      message: "Contract created successfully",
-      data: contract
-    };
+    return contract;
   }
 
   /**
@@ -77,15 +73,11 @@ export class ContractsService {
    */
   async findAll(query: QueryContractDto, user: User) {
     const contracts = await this.db.contract.findMany({
-      where: { ...query, event: { exhibitor_id: user.id } },
+      where: { ...query, event: { vendor_id: user.id } },
       include: { client: true }
     });
 
-    return {
-      success: true,
-      message: "Contracts retrieved successfully",
-      data: contracts
-    };
+    return contracts;
   }
 
   /**
@@ -99,11 +91,7 @@ export class ContractsService {
       where: { id },
       include: { client: true, event: true, cancellation_policy: true }
     });
-    return {
-      status: "success",
-      message: "Contract retrieved successfully",
-      data: contract
-    };
+    return contract;
   }
 
   async update(id: string, dto: UpdateContractDto) {
@@ -112,11 +100,7 @@ export class ContractsService {
       data: dto,
       include: { client: true, event: true, cancellation_policy: true }
     });
-    return {
-      status: "success",
-      message: "Contract updated successfully",
-      data: contract
-    };
+    return contract;
   }
 
   /**
@@ -130,10 +114,6 @@ export class ContractsService {
       where: { id }
     });
 
-    return {
-      status: "success",
-      message: "Contract deleted successfully",
-      data: contract
-    };
+    return contract;
   }
 }
