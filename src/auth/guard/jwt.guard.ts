@@ -47,6 +47,8 @@ export class AuthGuard implements CanActivate {
       secret: ACCESS_TOKEN_SECRET
     });
 
+    console.log("JWT Verified User", payload);
+
     if (!payload) {
       throw new UnauthorizedException("Please login to continue");
     }

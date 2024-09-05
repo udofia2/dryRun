@@ -15,12 +15,17 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  firstname    String
-  lastname     String
-  password     String
-  type         USERTYPE?
+  id        String    @id @default(uuid())
+  email     String    @unique
+  firstname String
+  lastname  String
+  password  String?
+  type      USERTYPE?
+
+  provider   String?
+  providerId String?
+  avatar     String?
+
   city         String?
   state        String?
   booked_dates DateTime[]

@@ -3,6 +3,9 @@ export * from "./activities";
 export * from "./auth";
 
 export const DATABASE_URL = process.env.DATABASE_URL;
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+export const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL;
 
 export const PORT = process.env.PORT;
 export const NODE_ENV = process.env.ENV;

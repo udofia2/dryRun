@@ -11,6 +11,7 @@ import { EventsModule } from "./domains/events/events.module";
 import { NotificationsModule } from "./domains/notifications/notifications.module";
 import { ContractsModule } from "./domains/contracts/contracts.module";
 import { ErrorService } from "./error/error.service";
+import { UsersModule } from './users/users.module';
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -30,7 +31,8 @@ import { ErrorService } from "./error/error.service";
     OfferModule,
     EventsModule,
     NotificationsModule,
-    ContractsModule
+    ContractsModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [AppService, ErrorService]

@@ -4,7 +4,8 @@ import {
   Body,
   Patch,
   HttpCode,
-  UseGuards
+  UseGuards,
+  Get
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
@@ -17,6 +18,10 @@ import {
 } from "./dto";
 import { Public } from "./decorator";
 import { AuthGuard } from "./guard";
+import { GoogleOAuthGuard } from "src/common/guards";
+import { CurrentUser } from "src/common/decorators";
+import { User } from "@prisma/client";
+import { FacebookOAuthGuard } from "src/common/guards/facebook-oauth.guard";
 
 @UseGuards(AuthGuard)
 @Controller("auth")
@@ -35,6 +40,30 @@ export class AuthController {
   @Post("login")
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Get("google")
+  @UseGuards(GoogleOAuthGuard)
+  googleAuth() {}
+
+  @Public()
+  @Get("google/callback")
+  @UseGuards(GoogleOAuthGuard)
+  googleAuthCallback(@CurrentUser() user: User) {
+    return this.authService.socialAuthCallback(user);
+  }
+
+  @Public()
+  @Get("facebook")
+  @UseGuards(FacebookOAuthGuard)
+  facebookAuth() {}
+
+  @Public()
+  @Get("facebook/redirect")
+  @UseGuards(FacebookOAuthGuard)
+  facebookAuthCallback(@CurrentUser() user: User) {
+    return this.authService.socialAuthCallback(user);
   }
 
   @Public()

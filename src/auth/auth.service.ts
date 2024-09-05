@@ -9,6 +9,7 @@ import {
   ForgotPasswordDto,
   LoginDto,
   RefreshTokenDto,
+  SocialAuthDto,
   VerifyOtpDto
 } from "./dto";
 import { DatabaseService } from "src/database/database.service";
@@ -23,13 +24,17 @@ import * as argon from "argon2";
 import { User } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { OtpService } from "src/provider/otp/otp.service";
+import { UsersService } from "src/users/users.service";
+import { AuthResponse } from "src/common/types";
+import { Profile as FacebookUserProfile } from "passport-facebook";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly db: DatabaseService,
     private readonly jwt: JwtService,
-    private readonly otpService: OtpService
+    private readonly otpService: OtpService,
+    private readonly usersService: UsersService
   ) {}
 
   /**
@@ -37,7 +42,7 @@ export class AuthService {
    * @param {CreateAuthDto} dto
    * @returns
    */
-  async register(dto: CreateAuthDto) {
+  async register(dto: CreateAuthDto): Promise<AuthResponse> {
     dto.email = dto.email.toLowerCase();
     // FIND USER
     const userExists = await this.db.user.findUnique({
@@ -59,15 +64,15 @@ export class AuthService {
     });
 
     delete user.password;
-    const token = await this.signToken(user);
+    const tokens = await this.signToken(user);
 
     return {
       user,
-      tokens: token
+      tokens
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthResponse> {
     dto.email = dto.email.toLowerCase();
     // FIND USER
     const user = await this.db.user.findUnique({
@@ -75,7 +80,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ForbiddenException("Invalid email or password");
+      throw new ForbiddenException("Invalid email or password!");
     }
 
     // VERIFY PASSWORD
@@ -85,11 +90,62 @@ export class AuthService {
     }
 
     delete user.password;
-    const token = await this.signToken(user);
+    const tokens = await this.signToken(user);
 
     return {
       user,
-      tokens: token
+      tokens
+    };
+  }
+
+  /**
+   * This function creates a new user account with the provided facebook profile information.
+   *
+   * @param {FacebookUserProfile} profile - The facebook profile information.
+   * @returns {Promise<User>} - A promise that resolves to the newly created facebook user.
+   */
+  public async createFacebookUser(profile: FacebookUserProfile): Promise<User> {
+    const facebookUser: SocialAuthDto = {
+      email: profile.emails[0].value,
+      firstname: profile.name.givenName,
+      lastname: profile.name.familyName,
+      provider: profile.provider,
+      providerId: profile.id,
+      avatar: profile.photos[0]?.value
+    };
+    return await this.usersService.create(facebookUser);
+  }
+
+  /**
+   * This function creates a new user account with the provided google profile information.
+   *
+   * @param profile
+   * @returns {Promise<User>} - A promise that resolves to the newly created google user.
+   */
+  public async createGoogleUser(profile: any): Promise<User> {
+    const googleUser: SocialAuthDto = {
+      email: profile.email,
+      firstname: profile.name.givenName,
+      lastname: profile.name.familyName,
+      avatar: profile.picture,
+      providerId: profile.id,
+      provider: "google"
+    };
+    return await this.usersService.create(googleUser);
+  }
+
+  /**
+   * Returns user tokens after successful google authentication.
+   *
+   * @param {User} user - The user to generate tokens for.
+   * @returns {Promise<Tokens>} A promise that resolves to the user's tokens.
+   */
+  public async socialAuthCallback(user: User): Promise<AuthResponse> {
+    user = await this.usersService.findByEmail(user.email);
+    const tokens = await this.signToken(user);
+    return {
+      user,
+      tokens
     };
   }
 
