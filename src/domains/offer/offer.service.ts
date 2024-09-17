@@ -150,7 +150,8 @@ export class OfferService {
    */
   async findAll(user: User) {
     const offers = await this.db.offer.findMany({
-      where: { vendor_id: user.id }
+      where: { vendor_id: user.id },
+      include: { event: { include: { client: true } } }
     });
 
     return offers;

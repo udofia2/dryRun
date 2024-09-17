@@ -1,10 +1,4 @@
-import {
-  IsDateString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString
-} from "class-validator";
+import { IsDateString, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class ProvisionDto {
   @IsNotEmpty()
@@ -25,6 +19,5 @@ export class ProvisionDto {
   amount: number;
 
   @IsString()
-  @IsOptional()
   vendor_name: string;
 }
