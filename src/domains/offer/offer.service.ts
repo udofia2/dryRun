@@ -183,7 +183,18 @@ export class OfferService {
     const offer = await this.db.offer.update({
       where: { id },
       data: dto,
-      include: { event: { include: { client: true } } }
+      include: {
+        event: {
+          include: {
+            client: true,
+            vendor: true,
+            specification: true,
+            prospect: true,
+            entry_passes: true,
+            contract: true
+          }
+        }
+      }
     });
 
     if (offer) {
