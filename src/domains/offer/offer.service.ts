@@ -137,7 +137,8 @@ export class OfferService {
       where: {
         status: STATUSTYPE[status.toLowerCase()],
         vendor_id: user.id
-      }
+      },
+      include: { event: { include: { client: true } } }
     });
 
     return offers;
@@ -165,7 +166,8 @@ export class OfferService {
    */
   async findById(id: string, user: User) {
     const offer = await this.db.offer.findUnique({
-      where: { id, vendor_id: user.id }
+      where: { id, vendor_id: user.id },
+      include: { event: { include: { client: true } } }
     });
 
     return offer;
