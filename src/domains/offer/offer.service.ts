@@ -152,7 +152,14 @@ export class OfferService {
   async findAll(user: User) {
     const offers = await this.db.offer.findMany({
       where: { vendor_id: user.id },
-      include: { event: { include: { client: true } } }
+      include: {
+        event: {
+          include: {
+            client: true,
+            specification: { include: { activities: true, provisions: true } }
+          }
+        }
+      }
     });
 
     return offers;
@@ -167,8 +174,19 @@ export class OfferService {
   async findById(id: string, user: User) {
     const offer = await this.db.offer.findUnique({
       where: { id, vendor_id: user.id },
-      include: { event: { include: { client: true } } }
+      include: {
+        event: {
+          include: {
+            client: true,
+            specification: { include: { activities: true, provisions: true } }
+          }
+        }
+      }
     });
+
+    if (!offer) {
+      throw new UnauthorizedException("Offer not found!");
+    }
 
     return offer;
   }
@@ -190,7 +208,7 @@ export class OfferService {
           include: {
             client: true,
             vendor: true,
-            specification: true,
+            specification: { include: { activities: true, provisions: true } },
             prospect: true,
             entry_passes: true,
             contract: true
