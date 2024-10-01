@@ -12,3 +12,6 @@ export const NEW_PASS_CREATED = "New Pass created";
 
 /// CONTRACT
 export const CONTRACT_CREATED = "New Contract created";
+
+/// INVOICE
+export const INVOICE_CREATED = "New Invoice created";

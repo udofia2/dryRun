@@ -97,6 +97,7 @@ model Client {
   updated_at DateTime @updatedAt
 
   contracts Contract[]
+  invoices  Invoice[]
 
   @@index([email])
 }
@@ -129,6 +130,7 @@ model PaymentStructure {
   updated_at DateTime @updatedAt
 }
 
+/// Payment structure types - lump_sum, per_specification
 enum PAYMENTSTRUCTURE {
   lump_sum
   per_specification
@@ -183,6 +185,8 @@ model Event {
   entry_passes EntryPass[]
 
   contract Contract?
+
+  invoice Invoice?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -328,6 +332,43 @@ model Cancellation {
   updated_at DateTime @updatedAt
 }
 
+model Invoice {
+  id String @id @default(uuid())
+
+  status INVOICESTATUS @default(pending)
+
+  client_email String
+  client       Client @relation(fields: [client_email], references: [email])
+
+  event_id String @unique
+  event    Event  @relation(fields: [event_id], references: [id])
+
+  payment_details PaymentDetails[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model PaymentDetails {
+  id       String   @id @default(uuid())
+  amount   Float
+  due_date DateTime
+
+  payment_style PAYMENTSTYLETYPE
+
+  invoice_id String
+  invoice    Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+/// Payment style types - lump_sum, part_payment
+enum PAYMENTSTYLETYPE {
+  lump_sum
+  part_payment
+}
+
 /// Policy specifier types - client, vendor
 enum POLICYSPECIFIER {
   client
@@ -358,6 +399,14 @@ enum STATUSTYPE {
   pending
   accepted
   rejected
+}
+
+/// Invoice status types - pending, paid, overdue, accepted
+enum INVOICESTATUS {
+  pending
+  paid
+  overdue
+  accepted
 }
 
 /// Ticket types - free, paid
