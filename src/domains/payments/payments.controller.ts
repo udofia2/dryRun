@@ -35,17 +35,17 @@ export class PaymentsController {
     return this.paymentsService.findAllUserInvoices(query, userId);
   }
 
-  @Get("invoices/invoice/:id")
+  @Get("invoices/:id")
   findOneInvoice(@Param("id") id: string) {
     return this.paymentsService.findOne(id);
   }
 
-  @Patch("invoices/invoice/:id")
+  @Patch("invoices/:id")
   updateInvoice(@Param("id") id: string, @Body() dto: UpdateInvoiceDto) {
     return this.paymentsService.update(id, dto);
   }
 
-  @Delete("invoices/invoice/:id")
+  @Delete("invoices/:id")
   removeInvoice(@Param("id") id: string) {
     return this.paymentsService.remove(id);
   }
