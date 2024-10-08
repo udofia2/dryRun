@@ -17,47 +17,46 @@ export class PaymentsService {
     private readonly db: DatabaseService
   ) {}
 
-  async createInvoice(dto: CreateInvoiceDto, user: User) {
-    const invoice = await this.db.$transaction(
-      async (tx) => {
-        // CREATE EVENT
-        const event = await this.eventsService.createNewEvent(
-          dto.event,
-          user,
-          tx
-        );
+  // async createInvoice(dto: CreateInvoiceDto, user: User) {
+  //   const invoice = await this.db.$transaction(
+  //     async (tx) => {
+  //       // CREATE EVENT
+  //       const event = await this.eventsService.createNewEvent(
+  //         dto.event,
+  //         user,
+  //         tx
+  //       );
 
-        // CREATE INVOICE
-        const invoice = tx.invoice.create({
-          data: {
-            client: {
-              connectOrCreate: {
-                where: { email: dto.client.email },
-                create: {
-                  ...dto.client,
-                  events: { connect: { id: event.id } }
-                }
-              }
-            },
-            event: {
-              connect: { id: event.id }
-            },
-            payment_details: { createMany: { data: dto.payment_details } }
-          },
-          include: { client: true, event: true, payment_details: true }
-        });
+  //       // CREATE INVOICE
+  //       const invoice = tx.invoice.create({
+  //         data: {
+  //           client: {
+  //             connectOrCreate: {
+  //               where: { email: dto.client.email },
+  //               create: {
+  //                 ...dto.client,
+  //                 events: { connect: { id: event.id } }
+  //               }
+  //             }
+  //           },
+  //           event: {
+  //             connect: { id: event.id }
+  //           }
+  //         },
+  //         include: { client: true, event: true, contract: true }
+  //       });
 
-        this._createNotification(user.id, dto.client.name, tx);
+  //       this._createNotification(user.id, dto.client.name, tx);
 
-        return invoice;
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable
-      }
-    );
+  //       return invoice;
+  //     },
+  //     {
+  //       isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+  //     }
+  //   );
 
-    return invoice;
-  }
+  //   return invoice;
+  // }
 
   private _createNotification(user_id: string, client_name: string, tx: any) {
     // CREATE NOTIFICATION
@@ -70,9 +69,8 @@ export class PaymentsService {
   }
 
   async findAllUserInvoices(query: QueryInvoiceDto, userId: string) {
-    console.log("userId", userId);
     const invoices = await this.db.invoice.findMany({
-      where: { ...query, event: { vendor_id: userId } },
+      where: { ...query, contract: { vendor_id: userId } },
       include: { client: true }
     });
 
@@ -82,7 +80,7 @@ export class PaymentsService {
   async findOne(id: string) {
     const invoice = await this.db.invoice.findUnique({
       where: { id },
-      include: { client: true, event: true }
+      include: { client: true, contract: true }
     });
     return invoice;
   }
@@ -91,7 +89,7 @@ export class PaymentsService {
     const invoice = await this.db.invoice.update({
       where: { id },
       data: dto,
-      include: { client: true, event: true }
+      include: { client: true, contract: true }
     });
     return invoice;
   }

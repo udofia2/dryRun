@@ -34,6 +34,7 @@ model User {
 
   prospects Prospect[]
   offers    Offer[]
+  Contract  Contract[]
 
   notifications Notification[]
 
@@ -109,8 +110,8 @@ model PaymentSchedule {
   due_date             DateTime
   amount               Float
 
-  contract_id String?
-  contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+  // contract_id String?
+  // contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -185,8 +186,6 @@ model Event {
   entry_passes EntryPass[]
 
   contract Contract?
-
-  invoice Invoice?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -305,13 +304,18 @@ model Contract {
 
   cancellation_policy Cancellation?
 
-  PaymentSchedule PaymentSchedule[]
+  payment_details PaymentDetails[]
+
+  vendor_id String
+  vendor    User   @relation(fields: [vendor_id], references: [id])
 
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
 
   event_id String @unique
   event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  invoice Invoice?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -340,24 +344,22 @@ model Invoice {
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
 
-  event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id])
-
-  payment_details PaymentDetails[]
+  contract_id String   @unique
+  contract    Contract @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
 model PaymentDetails {
-  id       String   @id @default(uuid())
-  amount   Float
-  due_date DateTime
+  id                   String           @id @default(uuid())
+  payment_style        PAYMENTSTYLETYPE
+  title_of_deliverable String
+  amount               Float
+  due_date             DateTime
 
-  payment_style PAYMENTSTYLETYPE
-
-  invoice_id String
-  invoice    Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  Contract   Contract? @relation(fields: [contractId], references: [id])
+  contractId String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

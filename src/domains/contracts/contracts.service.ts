@@ -42,7 +42,10 @@ export class ContractsService {
             event: {
               connect: { id: event.id }
             },
-            cancellation_policy: { create: dto.cancellation_policy }
+            cancellation_policy: { create: dto.cancellation_policy },
+            payment_details: { createMany: { data: dto.payment_details } },
+            vendor: { connect: { id: user.id } },
+            invoice: { create: { client_email: dto.client.email } }
           },
           include: { client: true, event: true, cancellation_policy: true }
         });
@@ -89,7 +92,12 @@ export class ContractsService {
   async findOne(id: string) {
     const contract = await this.db.contract.findUnique({
       where: { id },
-      include: { client: true, event: true, cancellation_policy: true }
+      include: {
+        client: true,
+        event: true,
+        cancellation_policy: true,
+        invoice: true
+      }
     });
     return contract;
   }
@@ -98,7 +106,12 @@ export class ContractsService {
     const contract = await this.db.contract.update({
       where: { id },
       data: dto,
-      include: { client: true, event: true, cancellation_policy: true }
+      include: {
+        client: true,
+        event: true,
+        cancellation_policy: true,
+        invoice: true
+      }
     });
     return contract;
   }

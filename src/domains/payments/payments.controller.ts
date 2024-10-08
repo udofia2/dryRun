@@ -22,10 +22,10 @@ import { AuthGuard } from "src/auth/guard";
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post("invoices")
-  createInvoice(@Body() dto: CreateInvoiceDto, @CurrentUser() user: User) {
-    return this.paymentsService.createInvoice(dto, user);
-  }
+  // @Post("invoices")
+  // createInvoice(@Body() dto: CreateInvoiceDto, @CurrentUser() user: User) {
+  //   return this.paymentsService.createInvoice(dto, user);
+  // }
 
   @Get("invoices")
   findAllUserInvoices(

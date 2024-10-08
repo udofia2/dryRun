@@ -1,10 +1,7 @@
 import { Type } from "class-transformer";
-import { IsNotEmptyObject, ValidateNested } from "class-validator";
-import {
-  CancellationDto,
-  CreateClientDto,
-  PaymentScheduleDto
-} from "src/common/dtos";
+import { IsArray, IsNotEmptyObject, ValidateNested } from "class-validator";
+import { CancellationDto, CreateClientDto } from "src/common/dtos";
+import { PaymentDetailsDto } from "src/common/dtos/payment-details.dto";
 import { CreateEventDto } from "src/domains/events/dto";
 
 export class CreateContractDto {
@@ -23,8 +20,8 @@ export class CreateContractDto {
   @Type(() => CancellationDto)
   cancellation_policy: CancellationDto;
 
-  @IsNotEmptyObject()
-  @ValidateNested()
-  @Type(() => PaymentScheduleDto)
-  payment_structure: PaymentScheduleDto;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PaymentDetailsDto)
+  payment_details: PaymentDetailsDto[];
 }
