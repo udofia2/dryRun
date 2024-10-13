@@ -17,35 +17,35 @@ import { User } from "@prisma/client";
 import { QueryInvoiceDto } from "./dto/query-invoice.dto";
 import { AuthGuard } from "src/auth/guard";
 
-@Controller("payments")
+@Controller("invoices")
 @UseGuards(AuthGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  // @Post("invoices")
+  // @Post("")
   // createInvoice(@Body() dto: CreateInvoiceDto, @CurrentUser() user: User) {
   //   return this.paymentsService.createInvoice(dto, user);
   // }
 
-  @Get("invoices")
-  findAllUserInvoices(
+  @Get("")
+  findAllUser(
     @Query() query: QueryInvoiceDto,
     @CurrentUser("id") userId: string
   ) {
     return this.paymentsService.findAllUserInvoices(query, userId);
   }
 
-  @Get("invoices/:id")
+  @Get("/:id")
   findOneInvoice(@Param("id") id: string) {
     return this.paymentsService.findOne(id);
   }
 
-  @Patch("invoices/:id")
+  @Patch("/:id")
   updateInvoice(@Param("id") id: string, @Body() dto: UpdateInvoiceDto) {
     return this.paymentsService.update(id, dto);
   }
 
-  @Delete("invoices/:id")
+  @Delete("/:id")
   removeInvoice(@Param("id") id: string) {
     return this.paymentsService.remove(id);
   }
