@@ -32,9 +32,9 @@ export class EmailService {
     try {
       const mailOptions: nodemailer.SendMailOptions = {
         from: "Tobi from E-vent <no-reply@event.com>",
-        to: to || "sams.olubode@gmail.com",
+        to: to || "enalsy22@gmail.com",
         subject,
-        text
+        html: text
       };
 
       return this.transporter.sendMail(mailOptions);

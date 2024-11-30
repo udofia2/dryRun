@@ -1,4 +1,5 @@
 import { DocumentBuilder, SwaggerDocumentOptions } from "@nestjs/swagger";
+import { PORT } from "src/constants";
 
 // Swagger setup
 export const configs = new DocumentBuilder()
@@ -7,7 +8,7 @@ export const configs = new DocumentBuilder()
   .setVersion("1.0.0")
   .addOAuth2()
   .addBearerAuth()
-  .addServer("http://localhost:4000/", "local")
+  .addServer(`http://localhost:${PORT}/`, "local")
   .build();
 
 export const options: SwaggerDocumentOptions = {

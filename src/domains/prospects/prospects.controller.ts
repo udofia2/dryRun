@@ -15,9 +15,12 @@ import { AuthGuard } from "src/auth/guard";
 import { UpdateProspectsDto } from "./dto/update-prospects.dto";
 import { CurrentUser } from "src/common/decorators/currentUser.decorator";
 import { User } from "@prisma/client";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 @Controller("prospects")
+@ApiTags("Prospects")
 export class ProspectsController {
   constructor(private readonly prospectsService: ProspectsService) {}
 

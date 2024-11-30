@@ -22,7 +22,9 @@ import { GoogleOAuthGuard } from "src/common/guards";
 import { CurrentUser } from "src/common/decorators";
 import { User } from "@prisma/client";
 import { FacebookOAuthGuard } from "src/common/guards/facebook-oauth.guard";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("Auth")
 @UseGuards(AuthGuard)
 @Controller("auth")
 export class AuthController {

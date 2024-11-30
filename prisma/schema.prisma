@@ -68,6 +68,8 @@ model Offer {
   id     String     @id @default(uuid())
   date   DateTime   @default(now())
   status STATUSTYPE @default(pending)
+  token       String   @unique
+  offer_link  String   @unique
 
   payment_structure PaymentStructure?
 
