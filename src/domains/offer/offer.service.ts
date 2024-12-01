@@ -107,7 +107,7 @@ export class OfferService {
           vendor: { connect: { id: user.id } },
           // client_email: dto.client.email,
           token: offerToken,
-          offer_link: "",
+          offer_link: "temp",
           payment_structure: {
             create: {
               structure:

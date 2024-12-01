@@ -3,12 +3,11 @@
 
   - A unique constraint covering the columns `[token]` on the table `Offer` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[offer_link]` on the table `Offer` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `offer_link` to the `Offer` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `token` to the `Offer` table without a default value. This is not possible if the table is not empty.
+  - The required column `token` was added to the `Offer` table with a prisma-level default value. This is not possible if the table is not empty. Please add this column as optional, then populate it before making it required.
 
 */
 -- AlterTable
-ALTER TABLE "Offer" ADD COLUMN     "offer_link" TEXT NOT NULL,
+ALTER TABLE "Offer" ADD COLUMN     "offer_link" TEXT,
 ADD COLUMN     "token" TEXT NOT NULL;
 
 -- CreateIndex
