@@ -6,21 +6,14 @@ import {
   LOCATIONTYPE,
   OFFER_ACCEPTED,
   OFFER_CREATED,
-  SERVER_URL,
+  FRONTEND_BASEURL,
   STATUSTYPE
 } from "src/constants";
 import { PAYMENTSTRUCTURE, User } from "@prisma/client";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
 import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
 import { NotificationsService } from "src/domains/notifications/notifications.service";
-import {
-  TERMII_API_KEY,
-  TERMII_EMAIL_ID,
-  TERMII_SEND_EMAIL_URL
-} from "../../constants"; // Assuming these constants are available
-// import { OtpService } from "src/provider/otp/otp.service";
-// import { ConfigService } from "@nestjs/config";
-import axios from "axios";
+import { TERMII_API_KEY, TERMII_EMAIL_ID } from "../../constants";
 import { v4 as uuidv4 } from "uuid";
 import { EmailService } from "src/provider/email/email.service";
 
@@ -30,7 +23,6 @@ export class OfferService {
     private db: DatabaseService,
     private readonly notificationsService: NotificationsService,
     private readonly emailService: EmailService
-    // private readonly configService: ConfigService
   ) {}
 
   /**
@@ -141,7 +133,7 @@ export class OfferService {
         }
       });
 
-      const offerLink = `${SERVER_URL}/offer/${offer.id}/${offerToken}`;
+      const offerLink = `${FRONTEND_BASEURL}/offer/${offer.id}/${offerToken}`;
 
       await tx.offer.update({
         where: { id: offer.id },
@@ -304,7 +296,7 @@ export class OfferService {
         <p>Click the link below to view and accept/reject your offer:</p>
         <a href="${offerLink}">Accept or Reject Offer</a>
         <p>Best regards,</p>
-        <p>Your Event Team</p>
+        <p>E-vent Team</p>
       `
     };
 
@@ -313,16 +305,6 @@ export class OfferService {
       data.subject,
       data.body
     );
-
-    console.log("Offer Sent");
-
-    if (process.env.NODE_ENV === "production") {
-      // Send the email through Termii
-      await axios.post(TERMII_SEND_EMAIL_URL, data);
-    } else {
-      // In development, log the OTP email data for debugging purposes
-      console.log("Offer email to be sent:", data);
-    }
   }
 
   /**
@@ -384,7 +366,6 @@ export class OfferService {
    * @returns The offer if found and token is valid
    */
   async findOfferByIdAndToken(offerId: string, token: string, user: User) {
-    // Find the offer from the database by ID and ensure the token matches
     const offer = await this.db.offer.findUnique({
       where: { id: offerId },
       include: {
@@ -400,19 +381,16 @@ export class OfferService {
       throw new UnauthorizedException("Offer not found!");
     }
 
-    // Check if the offer's token matches the one provided
     if (offer.token !== token) {
       throw new UnauthorizedException("Invalid token!");
     }
 
-    // Optionally, you can also check if the offer belongs to the correct vendor
     if (offer.vendor_id !== user.id) {
       throw new UnauthorizedException(
         "You are not authorized to view this offer!"
       );
     }
 
-    // Return the offer details to be displayed
     return offer;
   }
 
@@ -429,7 +407,6 @@ export class OfferService {
       throw new UnauthorizedException("Invalid offer or token");
     }
 
-    // Update the offer's status
     return await this.db.offer.update({
       where: { id: offerId },
       data: { status }

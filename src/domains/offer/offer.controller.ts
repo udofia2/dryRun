@@ -16,6 +16,7 @@ import { CurrentUser } from "src/common/decorators/currentUser.decorator";
 import { User } from "@prisma/client";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Public } from "../../auth/decorator/public.decorator";
 
 @ApiTags("Offers")
 @UseGuards(AuthGuard)
@@ -75,6 +76,7 @@ export class OfferController {
     return this.offerService.sendOfferLinkByEmail(id, user);
   }
 
+  @Public()
   @Get("view/:offerId/:token")
   async viewOffer(
     @Param("offerId") offerId: string,
@@ -89,6 +91,7 @@ export class OfferController {
     return offer;
   }
 
+  @Public()
   @Post("accept/:offerId/:token")
   async acceptOffer(
     @Param("offerId") offerId: string,
@@ -97,6 +100,7 @@ export class OfferController {
     return this.offerService.updateOfferStatus(offerId, token, "accepted");
   }
 
+  @Public()
   @Post("reject/:offerId/:token")
   async rejectOffer(
     @Param("offerId") offerId: string,

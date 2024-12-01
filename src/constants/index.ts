@@ -17,6 +17,6 @@ export const RESET_TOKEN_EXPIRY = process.env.RESET_TOKEN_EXPIRY;
 export const TERMII_API_KEY = process.env.TERMII_API_KEY;
 export const TERMII_EMAIL_ID = process.env.TERMII_EMAIL_ID;
 export const TERMII_SEND_EMAIL_URL = process.env.TERMII_SEND_EMAIL_URL;
-export const SERVER_URL = process.env.SERVER_URL;
+export const FRONTEND_BASEURL = process.env.FRONTEND_BASEURL;
 
 export const OTP_CACHE_EXPIRY = 1000 * 60 * 10;

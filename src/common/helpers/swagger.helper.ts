@@ -9,6 +9,7 @@ export const configs = new DocumentBuilder()
   .addOAuth2()
   .addBearerAuth()
   .addServer(`http://localhost:${PORT}/`, "local")
+  .addServer(`https://e-vents.onrender.com`, "prod")
   .build();
 
 export const options: SwaggerDocumentOptions = {
