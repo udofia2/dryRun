@@ -285,7 +285,11 @@ export class OfferService {
     return offer;
   }
 
-  private async sendOfferLinkViaEmail(email: string, offerLink: string) {
+  private async sendOfferLinkViaEmail(
+    email: string,
+    senderName: string,
+    offerLink: string
+  ) {
     const data = {
       api_key: TERMII_API_KEY,
       email_address: email,
@@ -293,8 +297,9 @@ export class OfferService {
       subject: "Your Offer is Ready!",
       body: `
         <p>Dear customer,</p>
+        <p>You have received offer from ${senderName},</p>
         <p>Click the link below to view and accept/reject your offer:</p>
-        <a href="${offerLink}">Accept or Reject Offer</a>
+        <a href="${offerLink}" style="background-color: #db5f12; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">View Offer</a>        
         <p>Best regards,</p>
         <p>E-vent Team</p>
       `
@@ -352,6 +357,7 @@ export class OfferService {
     // Send the offer link
     await this.sendOfferLinkViaEmail(
       offer.event.client.email,
+      user.firstname,
       offer.offer_link
     );
 
