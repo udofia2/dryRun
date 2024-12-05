@@ -133,7 +133,7 @@ export class OfferService {
         }
       });
 
-      const offerLink = `${FRONTEND_BASEURL}/offer/${offer.id}/${offerToken}`;
+      const offerLink = `${FRONTEND_BASEURL}/home/view-offers/${offer.id}/${offerToken}`;
 
       await tx.offer.update({
         where: { id: offer.id },
@@ -371,7 +371,7 @@ export class OfferService {
    * @param user - The authenticated user (vendor)
    * @returns The offer if found and token is valid
    */
-  async findOfferByIdAndToken(offerId: string, token: string, user: User) {
+  async findOfferByIdAndToken(offerId: string, token: string) {
     const offer = await this.db.offer.findUnique({
       where: { id: offerId },
       include: {
@@ -389,12 +389,6 @@ export class OfferService {
 
     if (offer.token !== token) {
       throw new UnauthorizedException("Invalid token!");
-    }
-
-    if (offer.vendor_id !== user.id) {
-      throw new UnauthorizedException(
-        "You are not authorized to view this offer!"
-      );
     }
 
     return offer;

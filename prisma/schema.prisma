@@ -299,6 +299,9 @@ model Contract {
   date   DateTime   @default(now())
   status STATUSTYPE @default(pending)
 
+  token             String?   @unique
+  contract_link     String?   @unique
+
   confidentiality                String @default("This agreement constitutes the entire agreement between the parties are commercial secrets and guarantees to not disclose such information to others without correct authorization.")
   indemnification                String @default("This Client agrees to indemnify and hold the event vendor harmless from any claims, liabilities, damages, or expenses arising out of or related to the scope of service, excluding those caused by the vendor’s negligence or willful misconduct.")
   photography_and_publicity_laws String @default("The client would allow the vendor to take pictures with consent for their brand publicity.")

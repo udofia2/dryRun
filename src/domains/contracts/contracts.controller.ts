@@ -17,27 +17,34 @@ import { User } from "@prisma/client";
 import { AuthGuard } from "src/auth/guard";
 import { VendorGuard } from "src/common/guards";
 import { QueryContractDto } from "./dtos/query-contract.dto";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Public } from "../../auth/decorator/public.decorator";
 
+@ApiTags("Contracts")
 @Controller("contracts")
 @UseGuards(AuthGuard)
 export class ContractsController {
   constructor(private readonly contractsService: ContractsService) {}
 
+  @ApiBearerAuth()
   @Post()
   create(@Body() dto: CreateContractDto, @CurrentUser() user: User) {
     return this.contractsService.create(dto, user);
   }
 
+  @ApiBearerAuth()
   @Get()
   findAll(@Query() query: QueryContractDto, @CurrentUser() user: User) {
     return this.contractsService.findAll(query, user);
   }
 
+  @ApiBearerAuth()
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.contractsService.findOne(id);
   }
 
+  @ApiBearerAuth()
   @Patch(":id")
   @ResourceModel("contract")
   @UseGuards(VendorGuard)
@@ -45,10 +52,64 @@ export class ContractsController {
     return this.contractsService.update(id, dto);
   }
 
+  @ApiBearerAuth()
   @Delete(":id")
   @ResourceModel("contract")
   @UseGuards(VendorGuard)
   remove(@Param("id") id: string) {
     return this.contractsService.remove(id);
+  }
+
+  @ApiBearerAuth()
+  @Get("link/:id")
+  getContractLink(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.contractsService.findContractLink(id, user);
+  }
+
+  @ApiBearerAuth()
+  @Post("send/link/:id")
+  sendContractLinkByMail(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.contractsService.sendContractLinkByEmail(id, user);
+  }
+
+  @Public()
+  @Get("view/:contractId/:token")
+  async viewContract(
+    @Param("contractId") offerId: string,
+    @Param("token") token: string,
+    @CurrentUser() user: User
+  ) {
+    const contract = await this.contractsService.findContractByIdAndToken(
+      offerId,
+      token,
+      user
+    );
+    return contract;
+  }
+
+  @Public()
+  @Post("accept/:contractId/:token")
+  async acceptContract(
+    @Param("offerId") contractId: string,
+    @Param("token") token: string
+  ) {
+    return this.contractsService.updateContractStatus(
+      contractId,
+      token,
+      "accepted"
+    );
+  }
+
+  @Public()
+  @Post("reject/:contractId/:token")
+  async rejectContract(
+    @Param("contractId") contractId: string,
+    @Param("token") token: string
+  ) {
+    return this.contractsService.updateContractStatus(
+      contractId,
+      token,
+      "rejected"
+    );
   }
 }

@@ -71,7 +71,7 @@ export class OfferController {
   }
 
   @ApiBearerAuth()
-  @Get("send/link/:id")
+  @Post("send/link/:id")
   sendOfferLinkByMail(@Param("id") id: string, @CurrentUser() user: User) {
     return this.offerService.sendOfferLinkByEmail(id, user);
   }
@@ -80,13 +80,11 @@ export class OfferController {
   @Get("view/:offerId/:token")
   async viewOffer(
     @Param("offerId") offerId: string,
-    @Param("token") token: string,
-    @CurrentUser() user: User
+    @Param("token") token: string
   ) {
     const offer = await this.offerService.findOfferByIdAndToken(
       offerId,
-      token,
-      user
+      token
     );
     return offer;
   }

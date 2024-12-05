@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { EXHIBITTYPE, USERTYPE } from "@prisma/client";
 import {
   registerDecorator,
@@ -35,10 +36,20 @@ export class CreateAuthDto {
 }
 
 export class LoginDto {
+  @ApiProperty({
+    example: "odiong@gmail.com",
+    description: "The user's email address. Must be a valid email format.",
+    required: true
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
+  @ApiProperty({
+    example: "Odiong123",
+    description: "The user's password. Must not be empty.",
+    required: true
+  })
   @IsString()
   @IsNotEmpty()
   password: string;
