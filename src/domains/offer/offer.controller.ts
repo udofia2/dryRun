@@ -10,7 +10,7 @@ import {
   Query
 } from "@nestjs/common";
 import { OfferService } from "./offer.service";
-import { CreateOfferDto } from "./dto";
+import { CreateOfferDto, SendOfferLinkDto } from "./dto";
 import { AuthGuard } from "src/auth/guard";
 import { CurrentUser } from "src/common/decorators/currentUser.decorator";
 import { User } from "@prisma/client";
@@ -72,8 +72,12 @@ export class OfferController {
 
   @ApiBearerAuth()
   @Post("send/link/:id")
-  sendOfferLinkByMail(@Param("id") id: string, @CurrentUser() user: User) {
-    return this.offerService.sendOfferLinkByEmail(id, user);
+  sendOfferLinkByMail(
+    @Param("id") id: string,
+    @Body() offerDto: SendOfferLinkDto,
+    @CurrentUser() user: User
+  ) {
+    return this.offerService.sendOfferLinkByEmail(id, offerDto, user);
   }
 
   @Public()
@@ -82,10 +86,7 @@ export class OfferController {
     @Param("offerId") offerId: string,
     @Param("token") token: string
   ) {
-    const offer = await this.offerService.findOfferByIdAndToken(
-      offerId,
-      token
-    );
+    const offer = await this.offerService.findOfferByIdAndToken(offerId, token);
     return offer;
   }
 

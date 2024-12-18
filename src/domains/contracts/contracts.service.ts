@@ -10,6 +10,7 @@ import { CreateNotificationDto } from "src/domains/notifications/dto/create-noti
 import { CONTRACT_CREATED, FRONTEND_BASEURL } from "src/constants";
 import { v4 as uuidv4 } from "uuid";
 import { EmailService } from "src/provider/email/email.service";
+import { SendContractLinkDto } from "./dtos/contract.dto";
 
 @Injectable()
 export class ContractsService {
@@ -144,7 +145,7 @@ export class ContractsService {
     return contract;
   }
 
-  private async sendContractLinkViaEmail(
+  private async sendContractEmail(
     email: string,
     senderName: string,
     contractLink: string
@@ -194,7 +195,11 @@ export class ContractsService {
    * @param {User} user
    * @returns
    */
-  async sendContractLinkByEmail(id: string, user: User) {
+  async sendContractLinkByEmail(
+    id: string,
+    contractDto: SendContractLinkDto,
+    user: User
+  ) {
     const contract = await this.db.contract.findUnique({
       where: { id, vendor_id: user.id },
       include: {
@@ -212,8 +217,8 @@ export class ContractsService {
     }
 
     // Send the contract link
-    await this.sendContractLinkViaEmail(
-      contract.event.client.email,
+    await this.sendContractEmail(
+      contractDto.email,
       user.firstname,
       contract.contract_link
     );
@@ -225,20 +230,16 @@ export class ContractsService {
    * Method to find an contract by ID and token and ensure that the token matches.
    * @param contractId - The ID of the contract
    * @param token - The token to verify
-   * @param user - The authenticated user (vendor)
    * @returns The contract if found and token is valid
    */
-  async findContractByIdAndToken(
-    contractId: string,
-    token: string,
-    user: User
-  ) {
+  async findContractByIdAndToken(contractId: string, token: string) {
     const contract = await this.db.contract.findUnique({
       where: { id: contractId },
       include: {
         event: {
           include: {
-            client: true
+            client: true,
+            specification: true
           }
         }
       }
@@ -250,12 +251,6 @@ export class ContractsService {
 
     if (contract.token !== token) {
       throw new UnauthorizedException("Invalid token!");
-    }
-
-    if (contract.vendor_id !== user.id) {
-      throw new UnauthorizedException(
-        "You are not authorized to view this contract!"
-      );
     }
 
     return contract;

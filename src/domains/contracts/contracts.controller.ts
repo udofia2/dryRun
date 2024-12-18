@@ -19,6 +19,7 @@ import { VendorGuard } from "src/common/guards";
 import { QueryContractDto } from "./dtos/query-contract.dto";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Public } from "../../auth/decorator/public.decorator";
+import { SendContractLinkDto } from "./dtos/contract.dto";
 
 @ApiTags("Contracts")
 @Controller("contracts")
@@ -68,21 +69,23 @@ export class ContractsController {
 
   @ApiBearerAuth()
   @Post("send/link/:id")
-  sendContractLinkByMail(@Param("id") id: string, @CurrentUser() user: User) {
-    return this.contractsService.sendContractLinkByEmail(id, user);
+  sendContractLinkByMail(
+    @Param("id") id: string,
+    @Body() contractDto: SendContractLinkDto,
+    @CurrentUser() user: User
+  ) {
+    return this.contractsService.sendContractLinkByEmail(id, contractDto, user);
   }
 
   @Public()
   @Get("view/:contractId/:token")
   async viewContract(
     @Param("contractId") offerId: string,
-    @Param("token") token: string,
-    @CurrentUser() user: User
+    @Param("token") token: string
   ) {
     const contract = await this.contractsService.findContractByIdAndToken(
       offerId,
-      token,
-      user
+      token
     );
     return contract;
   }
@@ -90,7 +93,7 @@ export class ContractsController {
   @Public()
   @Post("accept/:contractId/:token")
   async acceptContract(
-    @Param("offerId") contractId: string,
+    @Param("contractId") contractId: string,
     @Param("token") token: string
   ) {
     return this.contractsService.updateContractStatus(

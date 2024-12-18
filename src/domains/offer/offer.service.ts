@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { CreateOfferDto } from "./dto";
+import { CreateOfferDto, SendOfferLinkDto } from "./dto";
 import { DatabaseService } from "src/database/database.service";
 import {
   CLIENTTYPE,
@@ -285,7 +285,7 @@ export class OfferService {
     return offer;
   }
 
-  private async sendOfferLinkViaEmail(
+  private async sendOfferEmail(
     email: string,
     senderName: string,
     offerLink: string
@@ -337,7 +337,11 @@ export class OfferService {
    * @param {User} user
    * @returns
    */
-  async sendOfferLinkByEmail(id: string, user: User) {
+  async sendOfferLinkByEmail(
+    id: string,
+    offerDto: SendOfferLinkDto,
+    user: User
+  ) {
     const offer = await this.db.offer.findUnique({
       where: { id, vendor_id: user.id },
       include: {
@@ -355,11 +359,7 @@ export class OfferService {
     }
 
     // Send the offer link
-    await this.sendOfferLinkViaEmail(
-      offer.event.client.email,
-      user.firstname,
-      offer.offer_link
-    );
+    await this.sendOfferEmail(offerDto.email, user.firstname, offer.offer_link);
 
     return "Offer Sent";
   }
@@ -368,7 +368,6 @@ export class OfferService {
    * Method to find an offer by ID and token and ensure that the token matches.
    * @param offerId - The ID of the offer
    * @param token - The token to verify
-   * @param user - The authenticated user (vendor)
    * @returns The offer if found and token is valid
    */
   async findOfferByIdAndToken(offerId: string, token: string) {
@@ -377,7 +376,8 @@ export class OfferService {
       include: {
         event: {
           include: {
-            client: true
+            client: true,
+            specification: true
           }
         }
       }
