@@ -35,6 +35,7 @@ model User {
   prospects Prospect[]
   offers    Offer[]
   Contract  Contract[]
+  invoice  Invoice[]
 
   notifications Notification[]
 
@@ -200,8 +201,11 @@ model Specification {
   provisions Provision[]
   activities Activity[]
 
-  event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  event_id String? @unique
+  event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  invoice_id String? @unique
+  invoice    Invoice?  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -349,8 +353,19 @@ model Invoice {
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
 
-  contract_id String   @unique
-  contract    Contract @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
+  specification Specification?
+  payment_details PaymentDetails?
+
+  contract_id String?   @unique
+  contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  vendor_id String?
+  vendor    User?   @relation(fields: [vendor_id], references: [id])
+
+  token       String?   @unique @default(uuid())
+  invoice_link  String?   @unique @default(uuid())
+
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -365,6 +380,9 @@ model PaymentDetails {
 
   Contract   Contract? @relation(fields: [contractId], references: [id])
   contractId String?
+
+  invoice   Invoice? @relation(fields: [invoice_id], references: [id])
+  invoice_id String? @unique
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -414,6 +432,7 @@ enum INVOICESTATUS {
   paid
   overdue
   accepted
+  rejected
 }
 
 /// Ticket types - free, paid

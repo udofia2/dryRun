@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "INVOICESTATUS" ADD VALUE 'rejected';

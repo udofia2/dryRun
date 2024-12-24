@@ -1,10 +1,12 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmptyObject, ValidateNested } from "class-validator";
-import { CreateClientDto } from "src/common/dtos";
+import { IsNotEmptyObject, ValidateNested } from "class-validator";
+import { CreateClientDto, SpecificationDto } from "src/common/dtos";
 import { PaymentDetailsDto } from "src/common/dtos/payment-details.dto";
-import { CreateEventDto } from "src/domains/events/dto";
+// import { CreateEventDto } from "src/domains/events/dto";
 
 export class CreateInvoiceDto {
+  @ApiProperty()
   @IsNotEmptyObject()
   @ValidateNested()
   @Type(() => CreateClientDto)
@@ -12,13 +14,19 @@ export class CreateInvoiceDto {
 
   @IsNotEmptyObject()
   @ValidateNested()
-  @Type(() => CreateEventDto)
-  event: CreateEventDto;
+  @ApiProperty()
+  @Type(() => SpecificationDto)
+  specification: SpecificationDto;
 
-  @IsArray()
+  // @IsNotEmptyObject()
+  // @ValidateNested()
+  // @Type(() => CreateEventDto)
+  // event: CreateEventDto;
+
   @ValidateNested({ each: true })
+  @ApiProperty({ type: PaymentDetailsDto })
   @Type(() => PaymentDetailsDto)
-  payment_details: PaymentDetailsDto[];
+  payment_details: PaymentDetailsDto;
 }
 
 export class CreatePaymentDto {}

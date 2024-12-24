@@ -13,25 +13,55 @@ import {
 export class CreateAuthDto {
   @IsString()
   @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: "Abasiodiong",
+    description: "User first name"
+  })
   firstname: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: "Udofia",
+    description: "User last name"
+  })
   lastname: string;
 
   @IsEmail()
   @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: "odiong@gmail.com",
+    description: "User email address"
+  })
   email: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: "Odiong123$",
+    description: "User strong and secure password"
+  })
   password: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: "vendor",
+    description: "user type could be host or vendor"
+  })
   type: USERTYPE;
 
   @UserTypeMustBe("vendor")
+  @ApiProperty({
+    type: String,
+    example: "social_media_influencer",
+    description: "exhibit type"
+  })
   exhibit: EXHIBITTYPE;
 }
 
@@ -46,7 +76,7 @@ export class LoginDto {
   email: string;
 
   @ApiProperty({
-    example: "Odiong123",
+    example: "Odiong123$",
     description: "The user's password. Must not be empty.",
     required: true
   })
