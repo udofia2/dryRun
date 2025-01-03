@@ -24,18 +24,9 @@ export class PaymentsService {
     try {
       const invoice = await this.db.$transaction(
         async (tx) => {
-          // CREATE EVENT
-          // const event = await this.eventsService.createNewEvent(
-          //   dto.event,
-          //   user,
-          //   tx
-          // );
+          //generate invoice number
+          const invoiceNo = await this.generateInvoiceNumber(tx);
 
-          // // CREATE PAYMENT
-          // const payment = await tx.paymentDetails.create({
-          //   data: dto.payment_details
-          // });
-          console.log(user);
           // CREATE INVOICE
           const invoice = await tx.invoice.create({
             data: {
@@ -48,7 +39,6 @@ export class PaymentsService {
                     type: CLIENTTYPE[dto.client.type.toLowerCase()],
                     email: dto.client.email,
                     phone_number: dto.client.phone_number
-                    // events: { connect: { id: event.id } }
                   }
                 }
               },
@@ -62,15 +52,11 @@ export class PaymentsService {
                 }
               },
               token: "placehoder",
-              invoice_link: "placeholder"
-              // contract: {}
-              // event: {
-              //   connect: { id: event.id }
-              // }
+              invoice_link: "placeholder",
+              invoice_no: invoiceNo
             },
             include: {
               client: true,
-              // event: true,
               payment_details: true,
               specification: true
             }
@@ -138,6 +124,7 @@ export class PaymentsService {
       return invoice;
     } catch (err) {
       console.log(err);
+      throw err;
     }
   }
 
@@ -156,7 +143,7 @@ export class PaymentsService {
   async findAllUserInvoices(query: QueryInvoiceDto, userId: string) {
     try {
       const invoices = await this.db.invoice.findMany({
-        // where: { ...query, contract: { vendor_id: userId } },
+        // where: { ...query, vendor: { id: userId } },
         include: {
           client: true,
           specification: { include: { activities: true, provisions: true } },
@@ -323,5 +310,24 @@ export class PaymentsService {
       where: { id: invoiceId },
       data: { status }
     });
+  }
+
+  async generateInvoiceNumber(tx: any) {
+    // Get the current year
+    const currentYear = new Date().getFullYear();
+
+    // Get the count of invoices for the current year
+    const invoiceCount = await tx.invoice.count({
+      where: {
+        created_at: {
+          gte: new Date(currentYear, 0, 1),
+          lt: new Date(currentYear + 1, 0, 1)
+        }
+      }
+    });
+
+    // Generate invoice number (e.g., INV-2025-0001)
+    const paddedNumber = (invoiceCount + 1).toString().padStart(4, "0");
+    return `INV-${currentYear}-${paddedNumber}`;
   }
 }

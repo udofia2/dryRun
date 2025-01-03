@@ -350,6 +350,8 @@ model Invoice {
 
   status INVOICESTATUS @default(pending)
 
+  invoice_no String? @unique
+
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
 
