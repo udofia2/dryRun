@@ -160,7 +160,16 @@ export class PaymentsService {
   async findOne(id: string) {
     const invoice = await this.db.invoice.findUnique({
       where: { id },
-      include: { client: true }
+      include: {
+        client: true,
+        specification: {
+          include: {
+            activities: true,
+            provisions: true
+          }
+        },
+        vendor: true
+      }
     });
     return invoice;
   }
