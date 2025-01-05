@@ -45,6 +45,7 @@ export class PaymentsService {
               payment_details: {
                 create: dto.payment_details
               },
+              // vendor: user,
               specification: {
                 create: {
                   theme: dto.specification.theme,
@@ -168,7 +169,8 @@ export class PaymentsService {
             provisions: true
           }
         },
-        vendor: true
+        vendor: true,
+        payment_details: true
       }
     });
     return invoice;
