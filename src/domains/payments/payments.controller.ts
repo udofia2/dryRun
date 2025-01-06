@@ -16,7 +16,12 @@ import { CurrentUser } from "src/common/decorators";
 import { User } from "@prisma/client";
 import { QueryInvoiceDto } from "./dto/query-invoice.dto";
 import { AuthGuard } from "src/auth/guard";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiTags
+} from "@nestjs/swagger";
 import { Public } from "../../auth/decorator/public.decorator";
 import { SendInvoiceLinkDto } from "./dto/payment.dto";
 
@@ -67,6 +72,8 @@ export class PaymentsController {
 
   @ApiBearerAuth()
   @Post("send/link/:id")
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
   sendInvoiceLinkByMail(
     @Param("id") id: string,
     @Body() invoiceDto: SendInvoiceLinkDto,

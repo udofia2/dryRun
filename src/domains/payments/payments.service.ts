@@ -10,11 +10,12 @@ import { CLIENTTYPE, FRONTEND_BASEURL, INVOICE_CREATED } from "src/constants";
 import { QueryInvoiceDto } from "./dto/query-invoice.dto";
 import { SendInvoiceLinkDto } from "./dto/payment.dto";
 import { v4 as uuidv4 } from "uuid";
+import { EmailService } from "src/provider/email/email.service";
 
 @Injectable()
 export class PaymentsService {
-  emailService: any;
   constructor(
+    private readonly emailService: EmailService,
     private readonly eventsService: EventsService,
     private readonly notificationsService: NotificationsService,
     private readonly db: DatabaseService
@@ -30,7 +31,7 @@ export class PaymentsService {
           // CREATE INVOICE
           const invoice = await tx.invoice.create({
             data: {
-              // vendor: { connect: { id: user.id } },
+              vendor: { connect: { id: user.id } },
               client: {
                 connectOrCreate: {
                   where: { email: dto.client.email },
@@ -45,7 +46,6 @@ export class PaymentsService {
               payment_details: {
                 create: dto.payment_details
               },
-              // vendor: user,
               specification: {
                 create: {
                   theme: dto.specification.theme,
@@ -118,7 +118,8 @@ export class PaymentsService {
           return invoice;
         },
         {
-          isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+          isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+          timeout: 10000
         }
       );
 
@@ -144,7 +145,7 @@ export class PaymentsService {
   async findAllUserInvoices(query: QueryInvoiceDto, userId: string) {
     try {
       const invoices = await this.db.invoice.findMany({
-        // where: { ...query, vendor: { id: userId } },
+        where: { ...query, vendor: { id: userId } },
         include: {
           client: true,
           specification: { include: { activities: true, provisions: true } },
@@ -169,7 +170,16 @@ export class PaymentsService {
             provisions: true
           }
         },
-        vendor: true,
+        vendor: {
+          select: {
+            id: true,
+            email: true,
+            firstname: true,
+            lastname: true,
+            type: true,
+            exhibit: true
+          }
+        },
         payment_details: true
       }
     });
@@ -198,24 +208,29 @@ export class PaymentsService {
     senderName: string,
     invoiceLink: string
   ) {
-    const data = {
-      email_address: email,
-      subject: "Your Invoice is Ready!",
-      body: `
-        <p>Dear customer,</p>
-        <p>You have received a invoice from ${senderName},</p>
-        <p>Click the link below to view and accept/reject your invoice:</p>
-        <a href="${invoiceLink}" style="background-color: #db5f12; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">View Invoice</a>        
-        <p>Best regards,</p>
-        <p>E-vent Team</p>
-      `
-    };
+    try {
+      const data = {
+        email_address: email,
+        subject: "Your Invoice is Ready!",
+        body: `
+          <p>Dear customer,</p>
+          <p>You have received a invoice from ${senderName},</p>
+          <p>Click the link below to view and accept/reject your invoice:</p>
+          <a href="${invoiceLink}" style="background-color: #db5f12; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">View Invoice</a>        
+          <p>Best regards,</p>
+          <p>E-vent Team</p>
+        `
+      };
+      console.log("got to email sending method........", data);
 
-    await this.emailService.sendEmail(
-      data.email_address,
-      data.subject,
-      data.body
-    );
+      await this.emailService.sendEmail(
+        data.email_address,
+        data.subject,
+        data.body
+      );
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   /**
@@ -248,30 +263,26 @@ export class PaymentsService {
     invoiceDto: SendInvoiceLinkDto,
     user: User
   ) {
-    const invoice = await this.db.invoice.findUnique({
-      where: { id, vendor_id: user.id },
-      include: {
-        // event: {
-        //   include: {
-        //     client: true,
-        //     specification: { include: { activities: true, provisions: true } }
-        //   }
-        // }
+    try {
+      const invoice = await this.db.invoice.findUnique({
+        where: { id, vendor_id: user.id }
+      });
+
+      if (!invoice) {
+        throw new UnauthorizedException("Invoice not found!");
       }
-    });
 
-    if (!invoice) {
-      throw new UnauthorizedException("Invoice not found!");
+      // Send the invoice link
+      await this.sendInvoiceEmail(
+        invoiceDto.email,
+        user.firstname,
+        invoice.invoice_link
+      );
+
+      return "Invoice Sent";
+    } catch (error) {
+      console.log(error);
     }
-
-    // Send the invoice link
-    await this.sendInvoiceEmail(
-      invoiceDto.email,
-      user.firstname,
-      invoice.invoice_link
-    );
-
-    return "Invoice Sent";
   }
 
   /**
@@ -282,15 +293,15 @@ export class PaymentsService {
    */
   async findInvoiceByIdAndToken(invoiceId: string, token: string) {
     const invoice = await this.db.invoice.findUnique({
-      where: { id: invoiceId }
-      // include: {
-      //   event: {
-      //     include: {
-      //       client: true,
-      //       specification: true
-      //     }
-      //   }
-      // }
+      where: { id: invoiceId },
+      include: {
+        client: true,
+        specification: { include: { activities: true, provisions: true } },
+        payment_details: true,
+        vendor: {
+          select: { id: true, email: true, firstname: true, lastname: true }
+        }
+      }
     });
 
     if (!invoice) {
