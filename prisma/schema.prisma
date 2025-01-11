@@ -146,6 +146,9 @@ model Event {
   date DateTime?
   type String?
   link String?
+  event_link String?
+  token String?
+  status String?
 
   number_of_guests Int?
 

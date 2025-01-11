@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { CreateInvoiceDto } from "./dto/create-payment.dto";
 import { UpdateInvoiceDto } from "./dto/update-payment.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -221,7 +221,6 @@ export class PaymentsService {
           <p>E-vent Team</p>
         `
       };
-      console.log("got to email sending method........", data);
 
       await this.emailService.sendEmail(
         data.email_address,
@@ -229,7 +228,7 @@ export class PaymentsService {
         data.body
       );
     } catch (error) {
-      console.log(error);
+      Logger.log(error);
     }
   }
 

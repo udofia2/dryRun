@@ -8,6 +8,7 @@ import { configs, options } from "./common/helpers";
 import { LoggerMiddleware } from "./common/middlewares/logger.middleware";
 import { Logger } from "@nestjs/common";
 import { ResponseFormatInterceptor } from "./common/interceptors";
+import { DatabaseService } from "./database/database.service";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,8 @@ async function bootstrap() {
   app.useGlobalPipes(new AppValidationPipe());
 
   app.use(new LoggerMiddleware().use);
+
+  const databaseService = app.get(DatabaseService);
 
   // SWAGGER SETUP
   const document = SwaggerModule.createDocument(app, configs, options);
@@ -37,5 +40,6 @@ async function bootstrap() {
   Logger.log(
     `🚀 Swagger doc. is running on: ${await app.getUrl()}/${globalPrefix}/docs`
   );
+  databaseService.onConnect();
 }
 bootstrap();
