@@ -11,8 +11,8 @@ import {
 import { EventsService } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto";
-import { AuthGuard } from "src/auth/guard";
-import { CurrentUser } from "src/common/decorators";
+import { AuthGuard } from "../../auth/guard";
+import { CurrentUser } from "../../common/decorators";
 import { User } from "@prisma/client";
 import {
   ApiTags,
@@ -22,11 +22,11 @@ import {
   ApiBadRequestResponse,
   ApiOkResponse
 } from "@nestjs/swagger";
-import { Public } from "src/auth/decorator/public.decorator";
+import { Public } from "../../auth/decorator";
 import { SendEventLinkDto } from "./dto/event.dto";
 
-@UseGuards(AuthGuard)
 @ApiTags("Events")
+@UseGuards(AuthGuard)
 @Controller("events")
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
@@ -135,5 +135,13 @@ export class EventsController {
     @Param("token") token: string
   ) {
     return this.eventsService.updateEventStatus(eventId, token, "rejected");
+  }
+
+  @Public()
+  @Get("passes/:eventId")
+  async getEventPass(
+    @Param("eventId") eventId: string
+  ) {
+    return this.eventsService.eventPass(eventId);
   }
 }

@@ -459,6 +459,22 @@ export class EventsService {
     });
   }
 
+  async eventPass(eventId: string) {
+    
+    try {
+      const eventPasses = await this.db.event.findUnique({where: {
+        id: eventId
+      },
+      select: {entry_passes: true}
+    })
+
+    return eventPasses
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   private generateEventLink(eventId: string, token: string): string {
     return `${FRONTEND_BASEURL}/event/${eventId}/${token}`;
   }
