@@ -36,6 +36,7 @@ bower_components
 .lock-wscript
 .folerstructure copy.md
 .folerstructure.md
+.folderst.md
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release

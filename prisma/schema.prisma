@@ -36,6 +36,7 @@ model User {
   offers    Offer[]
   Contract  Contract[]
   invoice  Invoice[]
+  entry_passes EntryPass[]
 
   notifications Notification[]
 
@@ -176,8 +177,8 @@ model Event {
   website_link   String?
   cover_art_url  String?
 
-  vendor_id String
-  vendor    User   @relation(fields: [vendor_id], references: [id])
+  vendor_id String?
+  vendor    User?   @relation(fields: [vendor_id], references: [id])
 
   client_email String?
   client       Client? @relation(fields: [client_email], references: [email])
@@ -266,8 +267,13 @@ model EntryPass {
 
   invite Invite?
 
-  event_id String
-  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  event_id String?
+  event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  user_id                     String?        // Add user_id to link to the User model
+  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
+
+  attendee      Attendee[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -397,6 +403,22 @@ model PaymentDetails {
 enum PAYMENTSTYLETYPE {
   lump_sum
   part_payment
+}
+
+model Attendee {
+  id                        String   @id @default(uuid())
+  name                      String
+  contact                   String
+  affiliation_or_organization String
+  organization_name         String?
+  organization_contact      String?
+  representative_name       String?
+
+  entry_pass_id             String
+  entry_pass                EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
+
+  created_at                DateTime @default(now())
+  updated_at                DateTime @updatedAt
 }
 
 /// Policy specifier types - client, vendor

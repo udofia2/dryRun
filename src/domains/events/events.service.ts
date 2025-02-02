@@ -460,18 +460,17 @@ export class EventsService {
   }
 
   async eventPass(eventId: string) {
-    
     try {
-      const eventPasses = await this.db.event.findUnique({where: {
-        id: eventId
-      },
-      select: {entry_passes: true}
-    })
+      const eventPasses = await this.db.event.findUnique({
+        where: {
+          id: eventId
+        },
+        select: { entry_passes: true }
+      });
 
-    return eventPasses
-      
+      return eventPasses;
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
