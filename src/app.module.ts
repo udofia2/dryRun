@@ -13,6 +13,7 @@ import { ContractsModule } from "./domains/contracts/contracts.module";
 import { ErrorService } from "./error/error.service";
 import { UsersModule } from "./users/users.module";
 import { PaymentsModule } from "./domains/payments/payments.module";
+import { EntryPassesModule } from "./domains/entry-passes/entry-passes.module";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -34,7 +35,8 @@ import { PaymentsModule } from "./domains/payments/payments.module";
     NotificationsModule,
     ContractsModule,
     UsersModule,
-    PaymentsModule
+    PaymentsModule,
+    EntryPassesModule
   ],
   controllers: [AppController],
   providers: [AppService, ErrorService]

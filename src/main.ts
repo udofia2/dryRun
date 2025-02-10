@@ -11,7 +11,9 @@ import { ResponseFormatInterceptor } from "./common/interceptors";
 import { DatabaseService } from "./database/database.service";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true
+  });
   app.enableCors({ credentials: true });
 
   const globalPrefix = "api";

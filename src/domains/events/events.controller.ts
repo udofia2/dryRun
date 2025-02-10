@@ -139,9 +139,7 @@ export class EventsController {
 
   @Public()
   @Get("passes/:eventId")
-  async getEventPass(
-    @Param("eventId") eventId: string
-  ) {
+  async getEventPass(@Param("eventId") eventId: string) {
     return this.eventsService.eventPass(eventId);
   }
 }

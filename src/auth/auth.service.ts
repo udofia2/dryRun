@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   UnauthorizedException
 } from "@nestjs/common";
 import {
@@ -30,6 +31,7 @@ import { Profile as FacebookUserProfile } from "passport-facebook";
 
 @Injectable()
 export class AuthService {
+  private logger: Logger = new Logger(AuthService.name);
   constructor(
     private readonly db: DatabaseService,
     private readonly jwt: JwtService,
@@ -43,59 +45,69 @@ export class AuthService {
    * @returns
    */
   async register(dto: CreateAuthDto): Promise<AuthResponse> {
-    dto.email = dto.email.toLowerCase();
-    // FIND USER
-    const userExists = await this.db.user.findUnique({
-      where: { email: dto.email }
-    });
-    if (userExists) {
-      throw new ForbiddenException("User already exists. Please login");
+    try {
+      dto.email = dto.email.toLowerCase();
+      // FIND USER
+      const userExists = await this.db.user.findUnique({
+        where: { email: dto.email }
+      });
+      if (userExists) {
+        throw new ForbiddenException("User already exists. Please login");
+      }
+
+      if (dto.type === "vendor" && !ExhibitType.has(dto.exhibit)) {
+        throw new ForbiddenException("Invalid exhibit type");
+      }
+
+      dto.password = await argon.hash(dto.password);
+
+      // CREATE USER
+      const user = await this.db.user.create({
+        data: { ...dto }
+      });
+
+      delete user.password;
+      const tokens = await this.signToken(user);
+
+      return {
+        user,
+        tokens
+      };
+    } catch (error) {
+      console.log(error);
+      this.logger.error(error);
     }
-
-    if (dto.type === "vendor" && !ExhibitType.has(dto.exhibit)) {
-      throw new ForbiddenException("Invalid exhibit type");
-    }
-
-    dto.password = await argon.hash(dto.password);
-
-    // CREATE USER
-    const user = await this.db.user.create({
-      data: { ...dto }
-    });
-
-    delete user.password;
-    const tokens = await this.signToken(user);
-
-    return {
-      user,
-      tokens
-    };
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    dto.email = dto.email.toLowerCase();
-    // FIND USER
-    const user = await this.db.user.findUnique({
-      where: { email: dto.email }
-    });
+    try {
+      dto.email = dto.email.toLowerCase();
+      // FIND USER
+      const user = await this.db.user.findUnique({
+        where: { email: dto.email }
+      });
 
-    if (!user) {
-      throw new ForbiddenException("Invalid email or password!");
+      if (!user) {
+        throw new ForbiddenException("Invalid email or password!");
+      }
+
+      // VERIFY PASSWORD
+      const validPassword = await argon.verify(user.password, dto.password);
+      if (!validPassword) {
+        throw new ForbiddenException("Invalid email or password!");
+      }
+
+      delete user.password;
+      const tokens = await this.signToken(user);
+
+      return {
+        user,
+        tokens
+      };
+    } catch (error) {
+      console.log(error);
+      this.logger.error(error);
     }
-
-    // VERIFY PASSWORD
-    const validPassword = await argon.verify(user.password, dto.password);
-    if (!validPassword) {
-      throw new ForbiddenException("Invalid email or password!");
-    }
-
-    delete user.password;
-    const tokens = await this.signToken(user);
-
-    return {
-      user,
-      tokens
-    };
   }
 
   /**

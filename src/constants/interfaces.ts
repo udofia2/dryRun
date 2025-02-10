@@ -11,15 +11,19 @@ import { InviteDto } from "src/common/dtos/invite.dto";
 
 export const ExhibitType = new Set(Object.values(EXHIBITTYPE));
 
+// export enum CLIENTTYPE {
+//   "individual" = "individual",
+//   "company/organization" = "company/organization"
+// }
 export enum CLIENTTYPE {
-  "individual" = "Individual",
-  "company/organization" = "Company/Organization"
+  INDIVIDUAL = "INDIVIDUAL",
+  ORGANIZATION = "ORGANIZATION"
 }
 
 export enum LOCATIONTYPE {
-  "in_person" = "In Person",
-  "virtual" = "Virtual",
-  "hybrid" = "Hybrid"
+  in_person = "in_person",
+  virtual = "virtual",
+  hybrid = "hybrid"
 }
 
 export enum SOURCETYPE {
@@ -43,6 +47,11 @@ export enum ENTRYPASSTYPE {
   "free" = "free",
   "paid" = "paid",
   "invite_only" = "invite_only"
+}
+
+export enum STOCKTYPE {
+  "unlimited" = "unlimited",
+  "limited" = "limited"
 }
 
 export enum VIRTUALLOCATIONTYPE {
@@ -117,7 +126,7 @@ export class EntryPass {
   @ApiProperty({
     description: "Ticket type associated with the entry pass",
     required: false,
-    example: "Standard"
+    example: "free"
   })
   @IsString()
   @IsOptional()

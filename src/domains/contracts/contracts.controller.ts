@@ -18,7 +18,7 @@ import { AuthGuard } from "src/auth/guard";
 import { VendorGuard } from "src/common/guards";
 import { QueryContractDto } from "./dtos/query-contract.dto";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { Public } from "../../auth/decorator"
+import { Public } from "../../auth/decorator";
 import { SendContractLinkDto } from "./dtos/contract.dto";
 
 @ApiTags("Contracts")

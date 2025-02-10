@@ -37,6 +37,9 @@ model User {
   Contract  Contract[]
   invoice  Invoice[]
   entry_passes EntryPass[]
+  attendee Attendee[]
+  user_purchases UserPurchase[]
+   transactions Transaction[] 
 
   notifications Notification[]
 
@@ -258,6 +261,8 @@ model EntryPass {
   type              ENTRYPASSTYPE
   stock_type        STOCKTYPE     @default(unlimited)
   reservation_limit Int?
+  stock_limit Int?
+  stock_available Int
   description       String?
 
   price                            Float?  @default(0)
@@ -274,6 +279,8 @@ model EntryPass {
   user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
 
   attendee      Attendee[]
+  user_purchases UserPurchase[]
+  transactions Transaction[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -413,12 +420,53 @@ model Attendee {
   organization_name         String?
   organization_contact      String?
   representative_name       String?
+  attendee_type ATTENDEETYPE
 
   entry_pass_id             String
   entry_pass                EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
 
+  user_id                     String?        // Add user_id to link to the User model
+  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
+
   created_at                DateTime @default(now())
   updated_at                DateTime @updatedAt
+}
+
+
+model UserPurchase {
+  id String @id @default(uuid())
+  
+  quantity Int
+  
+  entry_pass_id String
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
+  
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+  
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, entry_pass_id])
+  @@index([entry_pass_id])
+}
+
+
+model Transaction {
+  id            String   @id @default(uuid())
+  reference     String   @unique
+  amount        Float
+  status        String
+  entry_pass_id String
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
+  user_id       String
+  user          User    @relation(fields: [user_id], references: [id])
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([reference])
+  @@index([user_id])
+  @@index([entry_pass_id])
 }
 
 /// Policy specifier types - client, vendor
@@ -491,6 +539,11 @@ enum SCHEDULETYPE {
 enum USERTYPE {
   host
   vendor
+}
+
+enum ATTENDEETYPE {
+  INDIVIDUAL
+  ORGANIZATION
 }
 
 enum EXHIBITTYPE {
