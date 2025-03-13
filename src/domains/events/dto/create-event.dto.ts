@@ -258,6 +258,15 @@ export class CreateEventDto {
   vendor_id: string;
 
   @ApiProperty({
+    description: "available number of entry passes",
+    required: false,
+    example: "300"
+  })
+  @IsNumber()
+  @IsOptional()
+  stock_available: number;
+
+  @ApiProperty({
     description: "Client email for event notifications",
     required: false,
     example: "client@example.com"

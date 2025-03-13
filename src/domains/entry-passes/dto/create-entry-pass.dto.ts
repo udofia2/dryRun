@@ -291,17 +291,6 @@ export class CreateEntryPassDto {
   @IsString()
   invite_message: string;
 
-  @ApiProperty({
-    type: [ATTENDEEDETAILS],
-    description: "The details of the  attendee for the entry pass",
-    example: ATTENDEEDETAILS
-  })
-  @ValidateNested({ each: true })
-  @Type(() => ATTENDEEDETAILS)
-  @IsOptional()
-  @IsArray()
-  attendee: ATTENDEEDETAILS[];
-
   // @IsOptional()
   @ValidateNested()
   @ApiProperty({

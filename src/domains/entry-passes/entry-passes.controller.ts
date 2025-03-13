@@ -17,7 +17,8 @@ import {
   ApiTags,
   ApiResponse,
   ApiOperation,
-  ApiHeader
+  ApiHeader,
+  ApiBody
 } from "@nestjs/swagger";
 import { AuthGuard } from "src/auth/guard";
 import { CurrentUser } from "src/common/decorators";
@@ -27,6 +28,7 @@ import { QueryEntryPassDto } from "./dto/query-entry-pass.dto";
 import { EntryPassService } from "./entry-passes.service";
 import { CreateEntryPassDto } from "./dto/create-entry-pass.dto";
 import { PaystackWebhookDto } from "./dto/webhook.dto";
+import { AddAttendeesDto } from "./dto/add-attendee.dto";
 
 @ApiTags("EntryPass")
 @Controller("entry-passes")
@@ -45,6 +47,64 @@ export class EntryPassController {
     @CurrentUser() user: User
   ) {
     return this.entryPassService.create(createEntryPassDto, user);
+  }
+
+  @Post(":id/attendees")
+  @ApiOperation({ summary: "Add attendees to an existing entry pass" })
+  @ApiResponse({ status: 200, description: "Attendees added successfully." })
+  @ApiResponse({ status: 404, description: "Entry pass not found." })
+  @ApiResponse({ status: 401, description: "Unauthorized." })
+  // @ApiBody({
+  //   type: AddAttendeesDto,
+  //   description: "The details of the attendees to be added",
+  //   required: true,
+  //   examples: {
+  //     example1: {
+  //       summary: "Example with individual attendees",
+  //       value: {
+  //         attendees: [
+  //           {
+  //             name: "John Doe",
+  //             contact: "+1234567890",
+  //             affiliation_or_organization: "Tech Corp",
+  //             organization_name: "Tech Corporation Ltd",
+  //             organization_contact: "+1987654321",
+  //             representative_name: "Jane Smith",
+  //             user_id: "12345-67890-abcdef",
+  //             attendee_type: "INDIVIDUAL"
+  //           }
+  //         ]
+  //       }
+  //     },
+  //     example2: {
+  //       summary: "Example with organization attendees",
+  //       value: {
+  //         attendees: [
+  //           {
+  //             name: "Alice Johnson",
+  //             contact: "+0987654321",
+  //             affiliation_or_organization: "Health Inc",
+  //             organization_name: "Health Corporation Ltd",
+  //             organization_contact: "+1122334455",
+  //             representative_name: "Bob Brown",
+  //             user_id: "abcdef-12345-67890",
+  //             attendee_type: "ORGANIZATION"
+  //           }
+  //         ]
+  //       }
+  //     }
+  //   }
+  // })
+  async addAttendees(
+    @Param("id") id: string,
+    @Body() addAttendeesDto: AddAttendeesDto,
+    @CurrentUser() user: User
+  ) {
+    return this.entryPassService.addAttendees(
+      id,
+      addAttendeesDto.attendees,
+      user
+    );
   }
 
   @Get()

@@ -1,5 +1,11 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  IsEnum,
+  isNumber,
+  IsNumber,
+  IsOptional,
+  IsString
+} from "class-validator";
 import { ENTRYPASSTYPE, STOCKTYPE } from "@prisma/client";
 
 export class QueryEntryPassDto {
@@ -41,17 +47,14 @@ export class QueryEntryPassDto {
 
   @ApiProperty({
     description: "Page number for pagination",
-    example: 1,
     required: false
   })
   @IsNumber()
   @IsOptional()
   page?: number;
 
-  @ApiProperty({
-    description: "Number of items per page",
-    example: 10,
-    required: false
+  @ApiPropertyOptional({
+    description: "Number of items per page"
   })
   @IsNumber()
   @IsOptional()

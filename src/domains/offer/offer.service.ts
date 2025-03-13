@@ -32,124 +32,133 @@ export class OfferService {
    * @returns
    */
   async create(dto: CreateOfferDto, user: User) {
-    return this.db.$transaction(async (tx) => {
-      // CREATE EVENT
-      const event = await tx.event.create({
-        data: {
-          name: dto.event.name,
-          date: new Date(dto.event.date),
-          type: dto.event.type,
-          description: dto.event.description ?? undefined,
-          city: dto.event.city ?? undefined,
-          state: dto.event.state ?? undefined,
-          location_type:
-            LOCATIONTYPE[
-              dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
-            ],
-          location_address: dto.event.location_address ?? undefined,
-          vendor: { connect: { id: user.id } },
-          client: {
-            connectOrCreate: {
-              where: { email: dto.client.email },
-              create: {
-                name: dto.client.name,
-                type: CLIENTTYPE[dto.client.type.toLowerCase()],
-                email: dto.client.email,
-                phone_number: dto.client.phone_number
+    return this.db.$transaction(
+      async (tx) => {
+        try {
+          // CREATE EVENT
+          const event = await tx.event.create({
+            data: {
+              name: dto.event.name,
+              date: new Date(dto.event.date),
+              type: dto.event.type,
+              description: dto.event.description ?? undefined,
+              city: dto.event.city ?? undefined,
+              state: dto.event.state ?? undefined,
+              location_type:
+                LOCATIONTYPE[
+                  dto.event.location_type.toLowerCase().replace(/[\s-]/g, "_")
+                ],
+              location_address: dto.event.location_address ?? undefined,
+              vendor: { connect: { id: user.id } },
+              client: {
+                connectOrCreate: {
+                  where: { email: dto.client.email },
+                  create: {
+                    name: dto.client.name,
+                    type: CLIENTTYPE[dto.client.type.toUpperCase()],
+                    email: dto.client.email,
+                    phone_number: dto.client.phone_number
+                  }
+                }
               }
             }
+          });
+
+          // CREATE SPECIFICATION
+          const specification = await tx.specification.create({
+            data: {
+              theme: dto.specification.theme,
+              event: { connect: { id: event.id } }
+            }
+          });
+
+          const provisions = dto.specification.provisions.map((provision) => {
+            return {
+              ...provision,
+              start_date: new Date(provision.start_date),
+              end_date: new Date(provision.end_date),
+              specification_id: specification.id
+            };
+          });
+
+          const activities = dto.specification.activities.map((activity) => {
+            return {
+              ...activity,
+              start_date: new Date(activity.start_date),
+              end_date: new Date(activity.end_date),
+              specification_id: specification.id
+            };
+          });
+
+          delete provisions[0]["exhibitor_name"];
+          delete activities[0]["exhibitor_name"];
+
+          try {
+            await tx.provision.createMany({ data: provisions });
+
+            await tx.activity.createMany({ data: activities });
+          } catch (error) {
+            console.log(error);
           }
-        }
-      });
 
-      // CREATE SPECIFICATION
-      const specification = await tx.specification.create({
-        data: {
-          theme: dto.specification.theme,
-          event: { connect: { id: event.id } }
-        }
-      });
+          // unique token and offer link
+          const offerToken = uuidv4();
 
-      const provisions = dto.specification.provisions.map((provision) => {
-        return {
-          ...provision,
-          start_date: new Date(provision.start_date),
-          end_date: new Date(provision.end_date),
-          specification_id: specification.id
-        };
-      });
-
-      const activities = dto.specification.activities.map((activity) => {
-        return {
-          ...activity,
-          start_date: new Date(activity.start_date),
-          end_date: new Date(activity.end_date),
-          specification_id: specification.id
-        };
-      });
-
-      delete provisions[0]["exhibitor_name"];
-      delete activities[0]["exhibitor_name"];
-
-      try {
-        await tx.provision.createMany({ data: provisions });
-
-        await tx.activity.createMany({ data: activities });
-      } catch (error) {
-        console.log(error);
-      }
-
-      // unique token and offer link
-      const offerToken = uuidv4();
-
-      const offer = await tx.offer.create({
-        data: {
-          vendor: { connect: { id: user.id } },
-          // client_email: dto.client.email,
-          token: offerToken,
-          offer_link: "temp",
-          payment_structure: {
-            create: {
-              structure:
-                PAYMENTSTRUCTURE[
-                  dto.payment_structure.structure
-                    .toLowerCase()
-                    .replace(/[\s-]/g, "_")
-                ],
-              initial_deposit: dto.payment_structure.initial_deposit ?? false,
-              initial_deposit_amount:
-                dto.payment_structure.initial_deposit_amount
-            }
-          },
-          event: { connect: { id: event.id } }
-        },
-        include: {
-          event: {
+          const offer = await tx.offer.create({
+            data: {
+              vendor: { connect: { id: user.id } },
+              // client_email: dto.client.email,
+              token: offerToken,
+              offer_link: "temp",
+              payment_structure: {
+                create: {
+                  structure:
+                    PAYMENTSTRUCTURE[
+                      dto.payment_structure.structure
+                        .toLowerCase()
+                        .replace(/[\s-]/g, "_")
+                    ],
+                  initial_deposit:
+                    dto.payment_structure.initial_deposit ?? false,
+                  initial_deposit_amount:
+                    dto.payment_structure.initial_deposit_amount
+                }
+              },
+              event: { connect: { id: event.id } }
+            },
             include: {
-              client: true
+              event: {
+                include: {
+                  client: true
+                }
+              },
+              payment_structure: true
             }
-          },
-          payment_structure: true
+          });
+
+          const offerLink = `${FRONTEND_BASEURL}/home/view-offers/${offer.id}/${offerToken}`;
+
+          await tx.offer.update({
+            where: { id: offer.id },
+            data: { offer_link: offerLink }
+          });
+
+          // CREATE NOTIFICATION
+          const newNotification: CreateNotificationDto = {
+            feature: "offer",
+            message: `${OFFER_CREATED} - ${offer.event.client.name}`,
+            user_id: user.id
+          };
+          await this.notificationsService.create(newNotification, tx);
+
+          return offer;
+        } catch (error) {
+          console.error(error);
+          throw error;
         }
-      });
-
-      const offerLink = `${FRONTEND_BASEURL}/home/view-offers/${offer.id}/${offerToken}`;
-
-      await tx.offer.update({
-        where: { id: offer.id },
-        data: { offer_link: offerLink }
-      });
-
-      // CREATE NOTIFICATION
-      const newNotification: CreateNotificationDto = {
-        feature: "offer",
-        message: `${OFFER_CREATED} - ${offer.event.client.name}`,
-        user_id: user.id
-      };
-      await this.notificationsService.create(newNotification, tx);
-
-      return offer;
-    });
+      },
+      { isolationLevel: "Serializable", timeout: 18000 }
+    );
   }
 
   /**

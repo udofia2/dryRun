@@ -14,6 +14,7 @@ import { QueryEntryPassDto } from "./dto/query-entry-pass.dto";
 import { UpdateEntryPassDto } from "./dto/update-entry-pass.dto";
 import { createHmac } from "crypto";
 import { PaystackWebhookDto } from "./dto/webhook.dto";
+import { AddAttendeesDto } from "./dto/add-attendee.dto";
 
 @Injectable()
 export class EntryPassService {
@@ -38,7 +39,6 @@ export class EntryPassService {
       recipients_emails,
       invite_subject,
       invite_message,
-      attendee,
       event,
       event_id,
       ...passData
@@ -47,7 +47,6 @@ export class EntryPassService {
     try {
       let finalEventId = event_id;
 
-      // Validate event existence if event_id is provided
       if (finalEventId) {
         const existingEvent = await this.db.event.findUnique({
           where: { id: finalEventId }
@@ -58,18 +57,15 @@ export class EntryPassService {
             `Event with ID ${finalEventId} not found`
           );
         }
-      }
-      // If event object is provided but no event_id, create new event
-      else if (event) {
-        // Map EventDetails to Prisma Event schema with required fields
+      } else if (event) {
         const eventData = {
-          name: event.event_name || "undecided", // Has default in schema
+          name: event.event_name || "undecided",
           type: event.event_type,
           description: event.event_description,
           event_link: event.event_link,
-          location_type: event.location_type || "in_person", // Required field
-          location_address: "undecided", // Has default in schema
-          vendor_id: user.id // Using vendor_id instead of direct user connect
+          location_type: event.location_type || "in_person",
+          location_address: "undecided",
+          vendor_id: user.id
         };
 
         const createdEvent = await this.db.event.create({
@@ -78,33 +74,14 @@ export class EntryPassService {
         finalEventId = createdEvent.id;
       }
 
-      // Transform attendee data to match Prisma schema
-      const mappedAttendees = attendee?.map((detail) => {
-        const { user_id, ...attendeeData } = detail;
-        return {
-          ...attendeeData,
-          user: { connect: { id: user.id } }
-        };
-      });
-
-      // Prepare the create data according to Prisma schema
       const createData = {
-        // EntryPass fields
         ...passData,
         stock_available: passData.stock_limit || 0,
         user: { connect: { id: user.id } },
 
-        // Event connection if provided and validated
         ...(finalEventId && {
           event: {
             connect: { id: finalEventId }
-          }
-        }),
-
-        // Attendee creation if provided
-        ...(mappedAttendees?.length > 0 && {
-          attendee: {
-            create: mappedAttendees
           }
         }),
 
@@ -144,6 +121,43 @@ export class EntryPassService {
     }
   }
 
+  /**
+   * Add attendees to an existing entry pass.
+   * @param entryPassId - The ID of the entry pass.
+   * @param attendees - The attendees to add.
+   * @param user - The authenticated user.
+   * @returns The updated entry pass with attendees.
+   */
+  async addAttendees(
+    entryPassId: string,
+    attendees: AddAttendeesDto["attendees"],
+    user: User
+  ) {
+    const entryPass = await this.findOne(entryPassId, user);
+
+    const mappedAttendees = attendees.map((detail) => {
+      const { user_id, ...attendeeData } = detail;
+      return {
+        ...attendeeData,
+        user: { connect: { id: user.id } }
+      };
+    });
+
+    return this.db.entryPass.update({
+      where: { id: entryPassId },
+      data: {
+        attendee: {
+          create: mappedAttendees
+        }
+      },
+      include: {
+        invite: true,
+        attendee: true,
+        event: true
+      }
+    });
+  }
+
   // /**
   //  * Retrieve all entry passes with optional filters.
   //  * @param query - Filters and pagination options.
@@ -151,21 +165,26 @@ export class EntryPassService {
   //  * @returns A list of entry passes.
   //  */
   async findAll(query: QueryEntryPassDto, user: User) {
-    const { page = 1, limit = 10, ...filters } = query;
+    try {
+      const { page = 1, limit = 10, ...filters } = query;
 
-    return this.db.entryPass.findMany({
-      where: {
-        ...filters,
-        user_id: user.id
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        invite: true,
-        attendee: true,
-        event: true
-      }
-    });
+      return this.db.entryPass.findMany({
+        where: {
+          ...filters,
+          user_id: user.id
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          invite: true,
+          attendee: true,
+          event: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 
   /**
