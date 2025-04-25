@@ -33,16 +33,7 @@ export class EntryPassService {
    * @returns The created entry pass.
    */
   async create(createEntryPassDto: CreateEntryPassDto, user: User) {
-    const {
-      sender_name,
-      receiver_name,
-      recipients_emails,
-      invite_subject,
-      invite_message,
-      event,
-      event_id,
-      ...passData
-    } = createEntryPassDto;
+    const { invite, event, event_id, ...passData } = createEntryPassDto;
 
     try {
       let finalEventId = event_id;
@@ -89,10 +80,10 @@ export class EntryPassService {
         invite: {
           create: {
             sender_email: user.email,
-            sender_name: sender_name,
-            recipients_emails: recipients_emails,
-            subject: invite_subject,
-            message: invite_message
+            sender_name: invite.sender_email,
+            recipients_emails: invite.recipients_emails,
+            subject: invite.subject,
+            message: invite.message
           }
         }
       };
@@ -107,7 +98,7 @@ export class EntryPassService {
       });
 
       // Send invites if recipients are specified
-      if (recipients_emails?.length > 0) {
+      if (invite.recipients_emails?.length > 0) {
         await this.sendInvite(entryPass.id, user);
       }
 

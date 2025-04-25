@@ -2,7 +2,6 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Invite, TICKETTYPE } from "@prisma/client";
 import { Type } from "class-transformer";
 import {
-  IsArray,
   IsBoolean,
   IsEnum,
   IsNumber,
@@ -244,7 +243,7 @@ export class CreateEntryPassDto {
     type: InviteDto
   })
   @IsOptional()
-  invite: Invite;
+  invite: InviteDto;
 
   @ApiProperty({
     description: "ID of the event this pass belongs to",
@@ -254,42 +253,6 @@ export class CreateEntryPassDto {
   @IsUUID()
   @IsOptional()
   event_id: string;
-
-  @ApiProperty({
-    description: "Name of the person sending the entry pass",
-    example: "Odiong"
-  })
-  @IsString()
-  sender_name: string;
-
-  @ApiProperty({
-    description: "Name of the person receiving the entry pass",
-    example: "tobi"
-  })
-  @IsString()
-  receiver_name: string;
-
-  @ApiProperty({
-    description: "Email of the recipients of the entry pass",
-    example: ["toba@e-vents.com", "Odiong@odiong.ng"]
-  })
-  @IsArray()
-  recipients_emails: string[];
-
-  @ApiProperty({
-    description: "the subject of the invitation mail",
-    example: "invitation to explore the moon"
-  })
-  @IsString()
-  invite_subject: string;
-
-  @ApiProperty({
-    description: "the body of the invitation mail",
-    example:
-      "Our satalite picked up a new rock. We thought you may be interested to help identify the type of rock we are dealing with considering your expertise in the field"
-  })
-  @IsString()
-  invite_message: string;
 
   // @IsOptional()
   @ValidateNested()
