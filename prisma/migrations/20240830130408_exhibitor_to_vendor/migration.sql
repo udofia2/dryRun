@@ -35,7 +35,7 @@ CREATE TYPE "USERTYPE" AS ENUM ('host', 'vendor');
 CREATE TYPE "EXHIBITTYPE" AS ENUM ('event_venues', 'event_planner', 'bar_services_and_beverages', 'photography', 'beauty_professional', 'fashion_designers_and_stylists', 'decorators', 'videographer', 'clothing_and_accessories', 'event_staffs', 'caterer', 'baker', 'printing_service', 'event_rental', 'favours_and_gifts', 'music_and_entertainment', 'lighting_and_av', 'dancing_instructor', 'health_and_fitness', 'accomodation', 'transportation_service', 'model', 'social_media_influencer');
 
 -- CreateEnum
-CREATE TYPE "PROSPECTTYPE" AS ENUM ('host', 'vendor');
+-- CREATE TYPE "PROSPECTTYPE" AS ENUM ('host', 'vendor');
 
 -- CreateTable
 CREATE TABLE "User" (

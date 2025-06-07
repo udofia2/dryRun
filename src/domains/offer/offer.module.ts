@@ -6,6 +6,14 @@ import { NotificationsService } from "src/domains/notifications/notifications.se
 import { EmailService } from "src/provider/email/email.service";
 // import { EmailModule } from "src/provider/email/email.module";
 import { ConfigService } from "@nestjs/config";
+import { ExpoPushProvider } from "src/provider/push/providers/expo.provider";
+import { FirebasePushProvider } from "src/provider/push/providers/firebase.provider";
+import { LocalPushProvider } from "src/provider/push/providers/local.provider";
+import { PushService } from "src/provider/push/push.service";
+import { AwsSnsProvider } from "src/provider/sms/providers/aws-sns.provider";
+import { LocalSmsProvider } from "src/provider/sms/providers/local.provider";
+import { TwilioSmsProvider } from "src/provider/sms/providers/twilio.provider";
+import { SmsService } from "src/provider/sms/sms.service";
 
 @Module({
   controllers: [OfferController],
@@ -14,7 +22,15 @@ import { ConfigService } from "@nestjs/config";
     DatabaseService,
     NotificationsService,
     EmailService,
-    ConfigService
+    ConfigService,
+    PushService,
+    SmsService,
+    FirebasePushProvider,
+    ExpoPushProvider,
+    LocalPushProvider,
+    TwilioSmsProvider,
+    AwsSnsProvider,
+    LocalSmsProvider
   ]
 })
 export class OfferModule {}

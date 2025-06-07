@@ -9,7 +9,10 @@ import {
 } from "src/constants";
 import { UpdateProspectsDto } from "./dto/update-prospects.dto";
 import { EVENTSOURCE, User } from "@prisma/client";
-import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
+import {
+  CreateNotificationDto,
+  NotificationFeature
+} from "src/domains/notifications/dto/create-notification.dto";
 import { NotificationsService } from "src/domains/notifications/notifications.service";
 
 @Injectable()
@@ -93,9 +96,9 @@ export class ProspectsService {
 
       // CREATE NOTIFICATION
       const newNotification: CreateNotificationDto = {
-        feature: "prospect",
+        feature: NotificationFeature.PROSPECT,
         message: `${PROSPECT_CREATED} - ${dto.client.name}`,
-        user_id: user.id
+        user_id: user.id as string
       };
       await this.notificationsService.create(newNotification, tx);
 
@@ -190,15 +193,11 @@ export class ProspectsService {
       }
     }
 
-    // create notification
-    await this.db.notification.create({
-      data: {
-        feature: "prospect",
-        message: `${PROSPECT_CONVERSION} - ${prospect.client.name}`,
-        user_id: user.id
-      }
+    await this.notificationsService.create({
+      feature: NotificationFeature.PROSPECT,
+      message: `${PROSPECT_CONVERSION} - ${prospect.client.name}`,
+      user_id: user.id
     });
-
     return prospect;
   }
 

@@ -5,7 +5,10 @@ import { DatabaseService } from "src/database/database.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { EventsService } from "../events/events.service";
 import { Prisma, User } from "@prisma/client";
-import { CreateNotificationDto } from "../notifications/dto/create-notification.dto";
+import {
+  CreateNotificationDto,
+  NotificationFeature
+} from "../notifications/dto/create-notification.dto";
 import { CLIENTTYPE, FRONTEND_BASEURL, INVOICE_CREATED } from "src/constants";
 import { QueryInvoiceDto } from "./dto/query-invoice.dto";
 import { SendInvoiceLinkDto } from "./dto/payment.dto";
@@ -134,7 +137,7 @@ export class PaymentsService {
     try {
       // CREATE NOTIFICATION
       const newNotification: CreateNotificationDto = {
-        feature: "invoice",
+        feature: NotificationFeature.INVOICE,
         message: `${INVOICE_CREATED} - ${client_name}`,
         user_id
       };

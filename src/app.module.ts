@@ -14,10 +14,15 @@ import { ErrorService } from "./error/error.service";
 import { UsersModule } from "./users/users.module";
 import { PaymentsModule } from "./domains/payments/payments.module";
 import { EntryPassesModule } from "./domains/entry-passes/entry-passes.module";
+import { HealthModule } from "./health/health.module";
+import { ConfigModule } from "@nestjs/config";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true
+    }),
     AuthModule,
     DatabaseModule,
     CacheModule.register({
@@ -36,7 +41,8 @@ import { EntryPassesModule } from "./domains/entry-passes/entry-passes.module";
     ContractsModule,
     UsersModule,
     PaymentsModule,
-    EntryPassesModule
+    EntryPassesModule,
+    HealthModule
   ],
   controllers: [AppController],
   providers: [AppService, ErrorService]

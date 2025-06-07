@@ -39,6 +39,15 @@ export class CreateAuthDto {
   email: string;
 
   @IsString()
+  @ApiProperty({
+    type: String,
+    example: "+2348012345678",
+    required: false,
+    description: "User phone number (optional)"
+  })
+  phone?: string;
+
+  @IsString()
   @IsNotEmpty()
   @ApiProperty({
     type: String,
@@ -62,7 +71,7 @@ export class CreateAuthDto {
     example: "social_media_influencer",
     description: "exhibit type"
   })
-  exhibit: EXHIBITTYPE;
+  exhibit?: EXHIBITTYPE;
 }
 
 export class LoginDto {

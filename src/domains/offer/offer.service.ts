@@ -11,7 +11,10 @@ import {
 } from "src/constants";
 import { PAYMENTSTRUCTURE, User } from "@prisma/client";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
-import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
+import {
+  CreateNotificationDto,
+  NotificationFeature
+} from "src/domains/notifications/dto/create-notification.dto";
 import { NotificationsService } from "src/domains/notifications/notifications.service";
 import { TERMII_API_KEY, TERMII_EMAIL_ID } from "../../constants";
 import { v4 as uuidv4 } from "uuid";
@@ -145,7 +148,7 @@ export class OfferService {
 
           // CREATE NOTIFICATION
           const newNotification: CreateNotificationDto = {
-            feature: "offer",
+            feature: NotificationFeature.OFFER,
             message: `${OFFER_CREATED} - ${offer.event.client.name}`,
             user_id: user.id
           };
@@ -258,13 +261,10 @@ export class OfferService {
       }
     }
 
-    // UPDATE NOTIFICATION
-    await this.db.notification.create({
-      data: {
-        feature: "offer",
-        message: `${OFFER_ACCEPTED} - ${offer.event.client.name}`,
-        user_id: user.id
-      }
+    await this.notificationsService.create({
+      feature: NotificationFeature.OFFER,
+      message: `${OFFER_ACCEPTED} - ${offer.event.client.name}`,
+      user_id: user.id
     });
 
     return offer;

@@ -6,7 +6,10 @@ import { EventsService } from "src/domains/events/events.service";
 import { Prisma, User } from "@prisma/client";
 import { QueryContractDto } from "./dtos/query-contract.dto";
 import { NotificationsService } from "src/domains/notifications/notifications.service";
-import { CreateNotificationDto } from "src/domains/notifications/dto/create-notification.dto";
+import {
+  CreateNotificationDto,
+  NotificationFeature
+} from "src/domains/notifications/dto/create-notification.dto";
 import { CONTRACT_CREATED, FRONTEND_BASEURL } from "src/constants";
 import { v4 as uuidv4 } from "uuid";
 import { EmailService } from "src/provider/email/email.service";
@@ -67,7 +70,7 @@ export class ContractsService {
 
         // CREATE NOTIFICATION
         const newNotification: CreateNotificationDto = {
-          feature: "contract",
+          feature: NotificationFeature.CONTRACT,
           message: `${CONTRACT_CREATED} - ${dto.client.name}`,
           user_id: user.id
         };

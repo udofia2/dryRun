@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as nodemailer from "nodemailer";
+import { NOTIFICATIONTYPE } from "src/domains/notifications/dto/send-notification.dto";
 
 @Injectable()
 export class EmailService {
@@ -28,7 +29,12 @@ export class EmailService {
    * @param {string} text - The body text of the email.
    * @returns {Promise<nodemailer.SentMessageInfo>} A Promise that resolves when the email is sent.
    */
-  async sendEmail(to: string, subject: string, text: string) {
+  async sendEmail(
+    to: string,
+    subject: string,
+    text: string,
+    priority?: NOTIFICATIONTYPE
+  ) {
     try {
       const mailOptions: nodemailer.SendMailOptions = {
         from: "Tobi from E-vent <no-reply@event.com>",

@@ -14,15 +14,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ======== USERS AND AUTHENTICATION ========
+
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
+  phone     String?    @unique
   firstname String
   lastname  String
   password  String?
   type      USERTYPE?
 
-  provider   String?
+  provider   PROVIDER?
   providerId String?
   avatar     String?
 
@@ -30,18 +33,41 @@ model User {
   state        String?
   booked_dates DateTime[]
   exhibit      EXHIBITTYPE?
-  events       Event[]
+
+  events         Event[]
+  prospects      Prospect[]
+  offers         Offer[]
+  Contract       Contract[]
+  invoice        Invoice[]
+  entry_passes   EntryPass[]
+  attendee       Attendee[]
+  user_purchases UserPurchase[]
+  transactions   Transaction[]
+  notifications Notification[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  deleted Boolean @default(false)
+
+  @@index([email])
+}
+
+// ======== CLIENT MANAGEMENT ========
+
+model Client {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  type         String
+  name         String
+  phone_number String
+  address      String?
 
   prospects Prospect[]
-  offers    Offer[]
-  Contract  Contract[]
-  invoice  Invoice[]
-  entry_passes EntryPass[]
-  attendee Attendee[]
-  user_purchases UserPurchase[]
-   transactions Transaction[] 
-
-  notifications Notification[]
+  events    Event[]
+  contracts Contract[]
+  invoices  Invoice[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -69,103 +95,30 @@ model Prospect {
   @@index([id])
 }
 
-model Offer {
-  id     String     @id @default(uuid())
-  date   DateTime   @default(now())
-  status STATUSTYPE @default(pending)
-  token       String   @unique @default(uuid())
-  offer_link  String?   @unique @default(uuid())
-
-  payment_structure PaymentStructure?
-
-  event_id String @unique
-  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
-
-  vendor_id String
-  vendor    User   @relation(fields: [vendor_id], references: [id])
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([id])
-}
-
-model Client {
-  id           String  @id @default(uuid())
-  email        String  @unique
-  type         String
-  name         String
-  phone_number String
-  address      String?
-
-  prospects Prospect[]
-  events    Event[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  contracts Contract[]
-  invoices  Invoice[]
-
-  @@index([email])
-}
-
-model PaymentSchedule {
-  id String @id @default(uuid())
-
-  title_of_deliverable String
-  due_date             DateTime
-  amount               Float
-
-  // contract_id String?
-  // contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model PaymentStructure {
-  id String @id @default(uuid())
-
-  structure              PAYMENTSTRUCTURE
-  initial_deposit        Boolean          @default(false)
-  initial_deposit_amount Float?
-
-  offer_id String? @unique
-  offer    Offer?  @relation(fields: [offer_id], references: [id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-/// Payment structure types - lump_sum, per_specification
-enum PAYMENTSTRUCTURE {
-  lump_sum
-  per_specification
-}
+// ======== EVENT MANAGEMENT ========
 
 model Event {
   id   String    @id @default(uuid())
   name String    @default("undecided")
   date DateTime?
   type String?
-  link String?
+
+  link       String?
   event_link String?
-  token String?
-  status String?
+  token      String?
+  status     String?
 
   number_of_guests Int?
 
   description String?
   city        String?
   state       String?
-
   location_type        String
   location             String?
   virtual_meeting_link String?
   location_address     String  @default("undecided")
 
-  // Event Schedule
+  // Event Schedule Info
   schedule_type       SCHEDULETYPE?
   start_date          DateTime?
   start_time          String?
@@ -190,11 +143,8 @@ model Event {
   prospect    Prospect? @relation(fields: [prospect_id], references: [id], onDelete: Cascade)
 
   specification Specification?
-
   offer Offer?
-
   entry_passes EntryPass[]
-
   contract Contract?
 
   created_at DateTime @default(now())
@@ -210,9 +160,28 @@ model Specification {
 
   event_id String? @unique
   event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
-
   invoice_id String? @unique
   invoice    Invoice?  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+
+model Activity {
+  id          String @id @default(uuid())
+  title       String
+  description String
+
+  vendor_name String?
+
+  start_date DateTime
+  end_date   DateTime
+
+  amount Float
+
+  specification_id String
+  specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -236,24 +205,7 @@ model Provision {
   updated_at DateTime @updatedAt
 }
 
-model Activity {
-  id          String @id @default(uuid())
-  title       String
-  description String
-
-  vendor_name String?
-
-  start_date DateTime
-  end_date   DateTime
-
-  amount Float
-
-  specification_id String
-  specification    Specification @relation(fields: [specification_id], references: [id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
+// ======== ENTRY PASS MANAGEMENT ========
 
 model EntryPass {
   id                String        @id @default(uuid())
@@ -261,24 +213,22 @@ model EntryPass {
   type              ENTRYPASSTYPE
   stock_type        STOCKTYPE     @default(unlimited)
   reservation_limit Int?
-  stock_limit Int?
-  stock_available Int
+  stock_limit       Int?
+  stock_available   Int
   description       String?
 
-  price                            Float?  @default(0)
+  price             Float?  @default(0)
   transfer_processing_fee_to_guest Boolean @default(false)
 
   ticket_type TICKETTYPE?
 
   invite Invite?
-
   event_id String?
   event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
-  user_id                     String?        // Add user_id to link to the User model
-  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
-
-  attendee      Attendee[]
+  user_id        String?
+  user           User?        @relation(fields: [user_id], references: [id])  // Define the reverse relation
+  attendee       Attendee[]
   user_purchases UserPurchase[]
   transactions Transaction[]
 
@@ -297,21 +247,89 @@ model Invite {
 
   entry_pass_id String    @unique
   entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
-
+  
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-model Notification {
-  id      String   @id @default(uuid())
-  date    DateTime @default(now())
-  message String
-  feature String
+model Attendee {
+  id                          String   @id @default(uuid())
+  name                        String
+  contact                     String
+  affiliation_or_organization String
+  organization_name           String?
+  organization_contact        String?
+  representative_name         String?
+  attendee_type               ATTENDEETYPE
+
+  entry_pass_id               String
+  entry_pass                  EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
+
+  user_id                     String?        // Add user_id to link to the User model
+  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
+
+  created_at                  DateTime @default(now())
+  updated_at                  DateTime @updatedAt
+}
+
+model UserPurchase {
+  id       String @id @default(uuid())
+  quantity Int
+  
+  entry_pass_id String
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
+  
   user_id String
-  user    User     @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id])
+  
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, entry_pass_id])
+  @@index([entry_pass_id])
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  reference     String   @unique
+  amount        Float
+  status        String
+
+  entry_pass_id String
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
+  
+  user_id       String
+  user          User    @relation(fields: [user_id], references: [id])
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([reference])
+  @@index([user_id])
+  @@index([entry_pass_id])
+}
+
+// ======== OFFERS AND CONTRACTS ========
+
+model Offer {
+  id          String     @id @default(uuid())
+  date        DateTime   @default(now())
+  status      STATUSTYPE @default(pending)
+  token       String     @unique @default(uuid())
+  offer_link  String?    @unique @default(uuid())
+
+  payment_structure PaymentStructure?
+
+  event_id String @unique
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  vendor_id String
+  vendor    User   @relation(fields: [vendor_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([id])
 }
 
 model Contract {
@@ -328,8 +346,9 @@ model Contract {
   entire_agreement               String @default("This agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, understandings, and agreements between the parties.")
 
   cancellation_policy Cancellation?
-
   payment_details PaymentDetails[]
+  invoice Invoice?
+
 
   vendor_id String
   vendor    User   @relation(fields: [vendor_id], references: [id])
@@ -339,8 +358,6 @@ model Contract {
 
   event_id String @unique
   event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
-
-  invoice Invoice?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -360,6 +377,38 @@ model Cancellation {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+// ======== PAYMENT MANAGEMENT ========
+
+model PaymentStructure {
+  id String @id @default(uuid())
+
+  structure              PAYMENTSTRUCTURE
+  initial_deposit        Boolean          @default(false)
+  initial_deposit_amount Float?
+
+  offer_id String? @unique
+  offer    Offer?  @relation(fields: [offer_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+
+model PaymentSchedule {
+  id String @id @default(uuid())
+
+  title_of_deliverable String
+  due_date             DateTime
+  amount               Float
+
+  // contract_id String?
+  // contract    Contract? @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 
 model Invoice {
   id String @id @default(uuid())
@@ -399,11 +448,56 @@ model PaymentDetails {
   Contract   Contract? @relation(fields: [contractId], references: [id])
   contractId String?
 
-  invoice   Invoice? @relation(fields: [invoice_id], references: [id])
-  invoice_id String? @unique
+  invoice    Invoice? @relation(fields: [invoice_id], references: [id])
+  invoice_id String?  @unique
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+
+// ======== NOTIFICATIONS ========
+
+model Notification {
+  id      String   @id @default(uuid())
+  date    DateTime @default(now())
+  message String
+  feature String
+  type    NotificationType
+  read    Boolean
+
+  user_id String
+  user    User     @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+// ======== ENUM TYPES ========
+
+/// NotificationType types - info, warning, critical
+enum NotificationType {
+  info
+  warning
+  critical
+}
+
+/// Payment structure types - local, google, facebook, apple, github, x, linkedin
+enum PROVIDER {
+  local
+  google
+  facebook
+  apple
+  github
+  twitter
+  linkedin
+}
+
+
+/// Payment structure types - lump_sum, per_specification
+enum PAYMENTSTRUCTURE {
+  lump_sum
+  per_specification
 }
 
 /// Payment style types - lump_sum, part_payment
@@ -412,62 +506,6 @@ enum PAYMENTSTYLETYPE {
   part_payment
 }
 
-model Attendee {
-  id                        String   @id @default(uuid())
-  name                      String
-  contact                   String
-  affiliation_or_organization String
-  organization_name         String?
-  organization_contact      String?
-  representative_name       String?
-  attendee_type ATTENDEETYPE
-
-  entry_pass_id             String
-  entry_pass                EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
-
-  user_id                     String?        // Add user_id to link to the User model
-  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
-
-  created_at                DateTime @default(now())
-  updated_at                DateTime @updatedAt
-}
-
-
-model UserPurchase {
-  id String @id @default(uuid())
-  
-  quantity Int
-  
-  entry_pass_id String
-  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
-  
-  user_id String
-  user    User   @relation(fields: [user_id], references: [id])
-  
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@unique([user_id, entry_pass_id])
-  @@index([entry_pass_id])
-}
-
-
-model Transaction {
-  id            String   @id @default(uuid())
-  reference     String   @unique
-  amount        Float
-  status        String
-  entry_pass_id String
-  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
-  user_id       String
-  user          User    @relation(fields: [user_id], references: [id])
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  @@index([reference])
-  @@index([user_id])
-  @@index([entry_pass_id])
-}
 
 /// Policy specifier types - client, vendor
 enum POLICYSPECIFIER {

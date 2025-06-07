@@ -28,6 +28,8 @@ import { OtpService } from "src/provider/otp/otp.service";
 import { UsersService } from "src/users/users.service";
 import { AuthResponse } from "src/common/types";
 import { Profile as FacebookUserProfile } from "passport-facebook";
+import { NotificationFeature } from "src/domains/notifications/dto/create-notification.dto";
+import { NotificationsService } from "src/domains/notifications/notifications.service";
 
 @Injectable()
 export class AuthService {
@@ -36,7 +38,8 @@ export class AuthService {
     private readonly db: DatabaseService,
     private readonly jwt: JwtService,
     private readonly otpService: OtpService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   /**
@@ -46,27 +49,8 @@ export class AuthService {
    */
   async register(dto: CreateAuthDto): Promise<AuthResponse> {
     try {
-      dto.email = dto.email.toLowerCase();
-      // FIND USER
-      const userExists = await this.db.user.findUnique({
-        where: { email: dto.email }
-      });
-      if (userExists) {
-        throw new ForbiddenException("User already exists. Please login");
-      }
+      const user = await this.usersService.create(dto);
 
-      if (dto.type === "vendor" && !ExhibitType.has(dto.exhibit)) {
-        throw new ForbiddenException("Invalid exhibit type");
-      }
-
-      dto.password = await argon.hash(dto.password);
-
-      // CREATE USER
-      const user = await this.db.user.create({
-        data: { ...dto }
-      });
-
-      delete user.password;
       const tokens = await this.signToken(user);
 
       return {
@@ -83,7 +67,7 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResponse> {
     try {
       dto.email = dto.email.toLowerCase();
-      // FIND USER
+
       const user = await this.db.user.findUnique({
         where: { email: dto.email }
       });
@@ -92,6 +76,8 @@ export class AuthService {
         throw new ForbiddenException("Invalid email or password!");
       }
 
+      console.log("user pass", user.password);
+      console.log("dto pass", dto.password);
       // VERIFY PASSWORD
       const validPassword = await argon.verify(user.password, dto.password);
       if (!validPassword) {
