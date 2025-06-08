@@ -14,6 +14,240 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+// ======== ROLES AND PERMISSIONS ENUMS ========
+
+/// System role types for platform-wide roles
+enum SYSTEM_ROLE_TYPE {
+  admin
+  support
+  moderator
+}
+
+/// Organization role types for team/organization roles
+enum ORG_ROLE_TYPE {
+  owner
+  admin
+  manager
+  member
+}
+
+/// Permission types covering all possible actions
+enum PERMISSION_TYPE {
+  event_sourcing
+  planner
+  backoffice
+  crm
+  event_create
+  event_edit
+  event_delete
+  event_view
+  prospect_create
+  prospect_edit
+  prospect_view
+  offer_create
+  offer_edit
+  offer_send
+  offer_view
+  contract_create
+  contract_edit
+  contract_send
+  contract_view
+  invoice_create
+  invoice_edit
+  invoice_send
+  invoice_view
+  collaborator_invite
+  collaborator_manage
+  role_assign
+  permission_grant
+}
+
+// ======== SYSTEM ROLES AND PERMISSIONS ========
+
+model SystemRole {
+  id          String            @id @default(uuid())
+  name        String            @unique
+  type        SYSTEM_ROLE_TYPE  @unique
+  description String?
+  is_active   Boolean           @default(true)
+
+  // Relations
+  permissions SystemRolePermission[]
+  user_roles  UserSystemRole[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model SystemPermission {
+  id          String          @id @default(uuid())
+  name        String          @unique
+  type        PERMISSION_TYPE @unique
+  description String?
+  resource    String?
+  action      String?
+  is_active   Boolean         @default(true)
+
+  // Relations
+  role_permissions SystemRolePermission[]
+  user_permissions UserPermission[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model SystemRolePermission {
+  id                   String           @id @default(uuid())
+  system_role_id       String
+  system_permission_id String
+
+  // Relations
+  system_role       SystemRole       @relation(fields: [system_role_id], references: [id], onDelete: Cascade)
+  system_permission SystemPermission @relation(fields: [system_permission_id], references: [id], onDelete: Cascade)
+
+  granted_at DateTime @default(now())
+
+  @@unique([system_role_id, system_permission_id])
+}
+
+// ======== ORGANIZATION ROLES AND PERMISSIONS ========
+
+model OrganizationRole {
+  id              String        @id @default(uuid())
+  name            String
+  type            ORG_ROLE_TYPE
+  description     String?
+  organization_id String        // References User (organization owner)
+  is_active       Boolean       @default(true)
+
+  // Relations
+  organization User                          @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
+  permissions  OrganizationRolePermission[]
+  user_roles   UserOrganizationRole[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([name, organization_id])
+}
+
+model OrganizationPermission {
+  id              String          @id @default(uuid())
+  name            String
+  type            PERMISSION_TYPE
+  description     String?
+  resource        String?
+  action          String?
+  organization_id String          // References User (organization owner)
+  is_active       Boolean         @default(true)
+
+  // Relations
+  organization     User                          @relation("OrganizationPermissions", fields: [organization_id], references: [id], onDelete: Cascade)
+  role_permissions OrganizationRolePermission[]
+  user_permissions UserPermission[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([name, organization_id])
+}
+
+model OrganizationRolePermission {
+  id                String                @id @default(uuid())
+  org_role_id       String
+  org_permission_id String
+
+  // Relations
+  org_role       OrganizationRole       @relation(fields: [org_role_id], references: [id], onDelete: Cascade)
+  org_permission OrganizationPermission @relation(fields: [org_permission_id], references: [id], onDelete: Cascade)
+
+  granted_at DateTime @default(now())
+
+  @@unique([org_role_id, org_permission_id])
+}
+
+// ======== USER ROLES AND COLLABORATIONS ========
+
+model UserSystemRole {
+  id             String    @id @default(uuid())
+  user_id        String
+  system_role_id String
+  assigned_by    String
+  assigned_at    DateTime  @default(now())
+  expires_at     DateTime?
+  is_active      Boolean   @default(true)
+
+  // Relations
+  user        User       @relation("UserSystemRoles", fields: [user_id], references: [id], onDelete: Cascade)
+  system_role SystemRole @relation(fields: [system_role_id], references: [id], onDelete: Cascade)
+  assigner    User       @relation("AssignedSystemRoles", fields: [assigned_by], references: [id])
+
+  @@unique([user_id, system_role_id])
+}
+
+model Collaboration {
+  id              String     @id @default(uuid())
+  collaborator_id String
+  organization_id String
+  email           String
+  status          STATUSTYPE @default(pending)
+  invited_by      String
+  invited_at      DateTime   @default(now())
+  accepted_at     DateTime?
+  expires_at      DateTime?
+  is_active       Boolean    @default(true)
+
+  // Relations
+  collaborator User                   @relation("Collaborations", fields: [collaborator_id], references: [id], onDelete: Cascade)
+  organization User                   @relation("OrganizationCollaborations", fields: [organization_id], references: [id], onDelete: Cascade)
+  inviter      User                   @relation("InvitedCollaborations", fields: [invited_by], references: [id])
+  roles        UserOrganizationRole[]
+
+  @@unique([collaborator_id, organization_id])
+  @@index([email])
+  @@index([organization_id])
+}
+
+model UserOrganizationRole {
+  id               String    @id @default(uuid())
+  collaboration_id String
+  org_role_id      String
+  assigned_by      String
+  assigned_at      DateTime  @default(now())
+  expires_at       DateTime?
+  is_active        Boolean   @default(true)
+
+  // Relations
+  collaboration UserColaborationRole @relation(fields: [collaboration_id], references: [id], onDelete: Cascade)
+  org_role      OrganizationRole     @relation(fields: [org_role_id], references: [id], onDelete: Cascade)
+  assigner      User                 @relation("AssignedOrgRoles", fields: [assigned_by], references: [id])
+
+  @@unique([collaboration_id, org_role_id])
+}
+
+model UserPermission {
+  id                String    @id @default(uuid())
+  user_id           String
+  permission_id     String?   // system permission
+  org_permission_id String?   // organization permission
+  organization_id   String?   // context organization
+  granted_by        String
+  granted_at        DateTime  @default(now())
+  expires_at        DateTime?
+  is_active         Boolean   @default(true)
+
+  // Relations
+  user           User                    @relation("UserDirectPermissions", fields: [user_id], references: [id], onDelete: Cascade)
+  permission     SystemPermission?       @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  org_permission OrganizationPermission? @relation(fields: [org_permission_id], references: [id], onDelete: Cascade)
+  organization   User?                   @relation("OrganizationUserPermissions", fields: [organization_id], references: [id], onDelete: Cascade)
+  grantor        User                    @relation("GrantedPermissions", fields: [granted_by], references: [id])
+
+  @@index([user_id])
+  @@index([organization_id])
+}
+
 // ======== USERS AND AUTHENTICATION ========
 
 model User {
@@ -44,6 +278,24 @@ model User {
   user_purchases UserPurchase[]
   transactions   Transaction[]
   notifications Notification[]
+
+    // System role relations
+  system_roles          UserSystemRole[] @relation("UserSystemRoles")
+  assigned_system_roles UserSystemRole[] @relation("AssignedSystemRoles")
+
+  // Organization role relations
+  organization_roles              OrganizationRole[]       @relation("OrganizationRoles")
+  organization_permissions        OrganizationPermission[] @relation("OrganizationPermissions")
+  collaborations                  Collaboration[]          @relation("Collaborations")
+  organization_collaborations     Collaboration[]          @relation("OrganizationCollaborations")
+  invited_collaborations          Collaboration[]          @relation("InvitedCollaborations")
+  assigned_org_roles              UserOrganizationRole[]   @relation("AssignedOrgRoles")
+
+  // Permission relations
+  direct_permissions              UserPermission[] @relation("UserDirectPermissions")
+  organization_user_permissions   UserPermission[] @relation("OrganizationUserPermissions")
+  granted_permissions             UserPermission[] @relation("GrantedPermissions")
+
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
