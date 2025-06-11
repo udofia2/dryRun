@@ -79,20 +79,6 @@ export class RolesPermissionsController {
     return this.rolesPermissionsService.createSystemRole(dto, user);
   }
 
-  @Get("system/roles")
-  @ApiOperation({
-    summary: "Get system roles",
-    description: "Retrieve all system roles with optional filtering"
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "System permissions retrieved successfully",
-    type: [PermissionResponseDto]
-  })
-  async getSystemPermissions(@Query() query: QueryPermissionsDto) {
-    return this.rolesPermissionsService.getSystemPermissions(query);
-  }
-
   @Patch("system/permissions/:id")
   @ApiOperation({
     summary: "Update system permission",
@@ -146,7 +132,11 @@ export class RolesPermissionsController {
     @Query() query: QueryPermissionsDto,
     @CurrentUser() user: User
   ) {
-    return this.rolesPermissionsService.getOrganizationPermissions(orgId, query, user);
+    return this.rolesPermissionsService.getOrganizationPermissions(
+      orgId,
+      query,
+      user
+    );
   }
 
   // ======== COLLABORATOR MANAGEMENT ========
@@ -224,10 +214,22 @@ export class RolesPermissionsController {
     description: "Retrieve all collaborators within a specific organization"
   })
   @ApiParam({ name: "orgId", description: "Organization ID" })
-  @ApiQuery({ name: "status", required: false, enum: ["pending", "accepted", "rejected"] })
+  @ApiQuery({
+    name: "status",
+    required: false,
+    enum: ["pending", "accepted", "rejected"]
+  })
   @ApiQuery({ name: "is_active", required: false, type: Boolean })
-  @ApiQuery({ name: "search", required: false, description: "Search by email or name" })
-  @ApiQuery({ name: "role_id", required: false, description: "Filter by role ID" })
+  @ApiQuery({
+    name: "search",
+    required: false,
+    description: "Search by email or name"
+  })
+  @ApiQuery({
+    name: "role_id",
+    required: false,
+    description: "Filter by role ID"
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Collaborators retrieved successfully",
@@ -444,7 +446,8 @@ export class RolesPermissionsController {
   @Post("system/roles/bulk-assign")
   @ApiOperation({
     summary: "Bulk assign system roles",
-    description: "Assign multiple system roles to multiple users (Platform Admin only)"
+    description:
+      "Assign multiple system roles to multiple users (Platform Admin only)"
   })
   @ApiBody({
     type: BulkAssignRolesDto,
@@ -474,7 +477,8 @@ export class RolesPermissionsController {
   @Post("organization/:orgId/permissions/bulk-assign")
   @ApiOperation({
     summary: "Bulk assign permissions",
-    description: "Assign multiple permissions to multiple users within an organization"
+    description:
+      "Assign multiple permissions to multiple users within an organization"
   })
   @ApiParam({ name: "orgId", description: "Organization ID" })
   @ApiResponse({
@@ -496,7 +500,11 @@ export class RolesPermissionsController {
     description: "Retrieve all permissions for a specific user"
   })
   @ApiParam({ name: "userId", description: "User ID" })
-  @ApiQuery({ name: "orgId", required: false, description: "Organization context" })
+  @ApiQuery({
+    name: "orgId",
+    required: false,
+    description: "Organization context"
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "User permissions retrieved successfully"
@@ -513,7 +521,11 @@ export class RolesPermissionsController {
     summary: "Get current user permissions",
     description: "Retrieve all permissions for the current authenticated user"
   })
-  @ApiQuery({ name: "orgId", required: false, description: "Organization context" })
+  @ApiQuery({
+    name: "orgId",
+    required: false,
+    description: "Organization context"
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Current user permissions retrieved successfully"
@@ -536,9 +548,13 @@ export class RolesPermissionsController {
     description: "Organization defaults created successfully"
   })
   async setupOrganizationDefaults(@CurrentUser() user: User) {
-    const permissions = await this.rolesPermissionsService.seedDefaultOrganizationPermissions(user.id);
-    const roles = await this.rolesPermissionsService.seedDefaultOrganizationRoles(user.id);
-    
+    const permissions =
+      await this.rolesPermissionsService.seedDefaultOrganizationPermissions(
+        user.id
+      );
+    const roles =
+      await this.rolesPermissionsService.seedDefaultOrganizationRoles(user.id);
+
     return {
       message: "Organization defaults created successfully",
       permissions,
@@ -561,11 +577,12 @@ export class RolesPermissionsController {
     @Param("permission") permission: string,
     @CurrentUser() user: User
   ) {
-    const hasPermission = await this.rolesPermissionsService.hasSystemPermission(
-      user.id,
-      permission as any
-    );
-    
+    const hasPermission =
+      await this.rolesPermissionsService.hasSystemPermission(
+        user.id,
+        permission as any
+      );
+
     return {
       user_id: user.id,
       permission,
@@ -576,7 +593,8 @@ export class RolesPermissionsController {
   @Get("check/organization/:orgId/:permission")
   @ApiOperation({
     summary: "Check organization permission",
-    description: "Check if current user has a specific permission within an organization"
+    description:
+      "Check if current user has a specific permission within an organization"
   })
   @ApiParam({ name: "orgId", description: "Organization ID" })
   @ApiParam({ name: "permission", description: "Permission type to check" })
@@ -589,12 +607,13 @@ export class RolesPermissionsController {
     @Param("permission") permission: string,
     @CurrentUser() user: User
   ) {
-    const hasPermission = await this.rolesPermissionsService.hasOrganizationPermission(
-      user.id,
-      orgId,
-      permission as any
-    );
-    
+    const hasPermission =
+      await this.rolesPermissionsService.hasOrganizationPermission(
+        user.id,
+        orgId,
+        permission as any
+      );
+
     return {
       user_id: user.id,
       organization_id: orgId,
@@ -602,7 +621,14 @@ export class RolesPermissionsController {
       has_permission: hasPermission
     };
   }
-}
+
+  @Get("system/roles")
+  @ApiOperation({
+    summary: "Get system roles",
+    description: "Retrieve all system roles with optional filtering"
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: "System roles retrieved successfully",
     type: [RoleResponseDto]
   })
@@ -613,7 +639,8 @@ export class RolesPermissionsController {
   @Get("system/roles/:id")
   @ApiOperation({
     summary: "Get system role by ID",
-    description: "Retrieve a specific system role with its permissions and users"
+    description:
+      "Retrieve a specific system role with its permissions and users"
   })
   @ApiParam({ name: "id", description: "System role ID" })
   @ApiResponse({
@@ -699,7 +726,11 @@ export class RolesPermissionsController {
     @Query() query: QueryRolesDto,
     @CurrentUser() user: User
   ) {
-    return this.rolesPermissionsService.getOrganizationRoles(orgId, query, user);
+    return this.rolesPermissionsService.getOrganizationRoles(
+      orgId,
+      query,
+      user
+    );
   }
 
   @Get("organization/roles/:id")
@@ -761,3 +792,10 @@ export class RolesPermissionsController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
+    description: "System permissions retrieved successfully",
+    type: [PermissionResponseDto]
+  })
+  async getSystemPermissions(@Query() query: QueryPermissionsDto) {
+    return this.rolesPermissionsService.getSystemPermissions(query);
+  }
+}

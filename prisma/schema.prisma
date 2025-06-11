@@ -14,7 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // ======== ROLES AND PERMISSIONS ENUMS ========
 
 /// System role types for platform-wide roles
@@ -66,11 +65,11 @@ enum PERMISSION_TYPE {
 // ======== SYSTEM ROLES AND PERMISSIONS ========
 
 model SystemRole {
-  id          String            @id @default(uuid())
-  name        String            @unique
-  type        SYSTEM_ROLE_TYPE  @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
+  type        SYSTEM_ROLE_TYPE @unique
   description String?
-  is_active   Boolean           @default(true)
+  is_active   Boolean          @default(true)
 
   // Relations
   permissions SystemRolePermission[]
@@ -98,7 +97,7 @@ model SystemPermission {
 }
 
 model SystemRolePermission {
-  id                   String           @id @default(uuid())
+  id                   String @id @default(uuid())
   system_role_id       String
   system_permission_id String
 
@@ -113,16 +112,43 @@ model SystemRolePermission {
 
 // ======== ORGANIZATION ROLES AND PERMISSIONS ========
 
+model Organization {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  ownerId   String
+  owner     User      @relation("UserOwnedOrganizations", fields: [ownerId], references: [id])
+  members   Member[] // Optional: many-to-many user access control
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+
+  @@unique([name, ownerId], name: "organization_owner_unique")
+}
+
+model Member {
+  id             String   @id @default(uuid())
+  userId         String
+  organizationId String
+  role           String   @db.VarChar(50) // optional: "admin", "viewer", etc.
+  createdAt      DateTime @default(now())
+
+  user         User         @relation("UserMemberships", fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId], name: "user_org_unique")
+}
+
 model OrganizationRole {
   id              String        @id @default(uuid())
   name            String
   type            ORG_ROLE_TYPE
   description     String?
-  organization_id String        // References User (organization owner)
+  organization_id String // References User (organization owner)
   is_active       Boolean       @default(true)
 
   // Relations
-  organization User                          @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization User                         @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
   permissions  OrganizationRolePermission[]
   user_roles   UserOrganizationRole[]
 
@@ -139,11 +165,11 @@ model OrganizationPermission {
   description     String?
   resource        String?
   action          String?
-  organization_id String          // References User (organization owner)
+  organization_id String // References User (organization owner)
   is_active       Boolean         @default(true)
 
   // Relations
-  organization     User                          @relation("OrganizationPermissions", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization     User                         @relation("OrganizationPermissions", fields: [organization_id], references: [id], onDelete: Cascade)
   role_permissions OrganizationRolePermission[]
   user_permissions UserPermission[]
 
@@ -154,7 +180,7 @@ model OrganizationPermission {
 }
 
 model OrganizationRolePermission {
-  id                String                @id @default(uuid())
+  id                String @id @default(uuid())
   org_role_id       String
   org_permission_id String
 
@@ -219,9 +245,9 @@ model UserOrganizationRole {
   is_active        Boolean   @default(true)
 
   // Relations
-  collaboration UserColaborationRole @relation(fields: [collaboration_id], references: [id], onDelete: Cascade)
-  org_role      OrganizationRole     @relation(fields: [org_role_id], references: [id], onDelete: Cascade)
-  assigner      User                 @relation("AssignedOrgRoles", fields: [assigned_by], references: [id])
+  collaboration Collaboration    @relation(fields: [collaboration_id], references: [id], onDelete: Cascade)
+  org_role      OrganizationRole @relation(fields: [org_role_id], references: [id], onDelete: Cascade)
+  assigner      User             @relation("AssignedOrgRoles", fields: [assigned_by], references: [id])
 
   @@unique([collaboration_id, org_role_id])
 }
@@ -229,9 +255,9 @@ model UserOrganizationRole {
 model UserPermission {
   id                String    @id @default(uuid())
   user_id           String
-  permission_id     String?   // system permission
-  org_permission_id String?   // organization permission
-  organization_id   String?   // context organization
+  permission_id     String? // system permission
+  org_permission_id String? // organization permission
+  organization_id   String? // context organization
   granted_by        String
   granted_at        DateTime  @default(now())
   expires_at        DateTime?
@@ -253,7 +279,7 @@ model UserPermission {
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
-  phone     String?    @unique
+  phone     String?   @unique
   firstname String
   lastname  String
   password  String?
@@ -277,28 +303,30 @@ model User {
   attendee       Attendee[]
   user_purchases UserPurchase[]
   transactions   Transaction[]
-  notifications Notification[]
+  notifications  Notification[]
 
-    // System role relations
+  // System role relations
   system_roles          UserSystemRole[] @relation("UserSystemRoles")
   assigned_system_roles UserSystemRole[] @relation("AssignedSystemRoles")
 
   // Organization role relations
-  organization_roles              OrganizationRole[]       @relation("OrganizationRoles")
-  organization_permissions        OrganizationPermission[] @relation("OrganizationPermissions")
-  collaborations                  Collaboration[]          @relation("Collaborations")
-  organization_collaborations     Collaboration[]          @relation("OrganizationCollaborations")
-  invited_collaborations          Collaboration[]          @relation("InvitedCollaborations")
-  assigned_org_roles              UserOrganizationRole[]   @relation("AssignedOrgRoles")
+  ownedOrganizations Organization[] @relation("UserOwnedOrganizations")
+  memberships        Member[]       @relation("UserMemberships")
+
+  organization_roles          OrganizationRole[]       @relation("OrganizationRoles")
+  organization_permissions    OrganizationPermission[] @relation("OrganizationPermissions")
+  collaborations              Collaboration[]          @relation("Collaborations")
+  organization_collaborations Collaboration[]          @relation("OrganizationCollaborations")
+  invited_collaborations      Collaboration[]          @relation("InvitedCollaborations")
+  assigned_org_roles          UserOrganizationRole[]   @relation("AssignedOrgRoles")
 
   // Permission relations
-  direct_permissions              UserPermission[] @relation("UserDirectPermissions")
-  organization_user_permissions   UserPermission[] @relation("OrganizationUserPermissions")
-  granted_permissions             UserPermission[] @relation("GrantedPermissions")
+  direct_permissions            UserPermission[] @relation("UserDirectPermissions")
+  organization_user_permissions UserPermission[] @relation("OrganizationUserPermissions")
+  granted_permissions           UserPermission[] @relation("GrantedPermissions")
 
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
   deleted Boolean @default(false)
@@ -362,9 +390,9 @@ model Event {
 
   number_of_guests Int?
 
-  description String?
-  city        String?
-  state       String?
+  description          String?
+  city                 String?
+  state                String?
   location_type        String
   location             String?
   virtual_meeting_link String?
@@ -395,9 +423,9 @@ model Event {
   prospect    Prospect? @relation(fields: [prospect_id], references: [id], onDelete: Cascade)
 
   specification Specification?
-  offer Offer?
-  entry_passes EntryPass[]
-  contract Contract?
+  offer         Offer?
+  entry_passes  EntryPass[]
+  contract      Contract?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -410,15 +438,14 @@ model Specification {
   provisions Provision[]
   activities Activity[]
 
-  event_id String? @unique
-  event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
-  invoice_id String? @unique
-  invoice    Invoice?  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  event_id   String?  @unique
+  event      Event?   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  invoice_id String?  @unique
+  invoice    Invoice? @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
-
 
 model Activity {
   id          String @id @default(uuid())
@@ -469,20 +496,20 @@ model EntryPass {
   stock_available   Int
   description       String?
 
-  price             Float?  @default(0)
+  price                            Float?  @default(0)
   transfer_processing_fee_to_guest Boolean @default(false)
 
   ticket_type TICKETTYPE?
 
-  invite Invite?
+  invite   Invite?
   event_id String?
   event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
 
   user_id        String?
-  user           User?        @relation(fields: [user_id], references: [id])  // Define the reverse relation
+  user           User?          @relation(fields: [user_id], references: [id]) // Define the reverse relation
   attendee       Attendee[]
   user_purchases UserPurchase[]
-  transactions Transaction[]
+  transactions   Transaction[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -499,13 +526,13 @@ model Invite {
 
   entry_pass_id String    @unique
   entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
-  
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
 model Attendee {
-  id                          String   @id @default(uuid())
+  id                          String       @id @default(uuid())
   name                        String
   contact                     String
   affiliation_or_organization String
@@ -514,26 +541,26 @@ model Attendee {
   representative_name         String?
   attendee_type               ATTENDEETYPE
 
-  entry_pass_id               String
-  entry_pass                  EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
+  entry_pass_id String
+  entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
 
-  user_id                     String?        // Add user_id to link to the User model
-  user                        User?          @relation(fields: [user_id], references: [id])  // Define the reverse relation
+  user_id String? // Add user_id to link to the User model
+  user    User?   @relation(fields: [user_id], references: [id]) // Define the reverse relation
 
-  created_at                  DateTime @default(now())
-  updated_at                  DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model UserPurchase {
   id       String @id @default(uuid())
   quantity Int
-  
+
   entry_pass_id String
   entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id], onDelete: Cascade)
-  
+
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
-  
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -542,19 +569,19 @@ model UserPurchase {
 }
 
 model Transaction {
-  id            String   @id @default(uuid())
-  reference     String   @unique
-  amount        Float
-  status        String
+  id        String @id @default(uuid())
+  reference String @unique
+  amount    Float
+  status    String
 
   entry_pass_id String
   entry_pass    EntryPass @relation(fields: [entry_pass_id], references: [id])
-  
-  user_id       String
-  user          User    @relation(fields: [user_id], references: [id])
-  
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@index([reference])
   @@index([user_id])
@@ -564,11 +591,11 @@ model Transaction {
 // ======== OFFERS AND CONTRACTS ========
 
 model Offer {
-  id          String     @id @default(uuid())
-  date        DateTime   @default(now())
-  status      STATUSTYPE @default(pending)
-  token       String     @unique @default(uuid())
-  offer_link  String?    @unique @default(uuid())
+  id         String     @id @default(uuid())
+  date       DateTime   @default(now())
+  status     STATUSTYPE @default(pending)
+  token      String     @unique @default(uuid())
+  offer_link String?    @unique @default(uuid())
 
   payment_structure PaymentStructure?
 
@@ -589,8 +616,8 @@ model Contract {
   date   DateTime   @default(now())
   status STATUSTYPE @default(pending)
 
-  token             String?   @unique
-  contract_link     String?   @unique
+  token         String? @unique
+  contract_link String? @unique
 
   confidentiality                String @default("This agreement constitutes the entire agreement between the parties are commercial secrets and guarantees to not disclose such information to others without correct authorization.")
   indemnification                String @default("This Client agrees to indemnify and hold the event vendor harmless from any claims, liabilities, damages, or expenses arising out of or related to the scope of service, excluding those caused by the vendor’s negligence or willful misconduct.")
@@ -598,9 +625,8 @@ model Contract {
   entire_agreement               String @default("This agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, understandings, and agreements between the parties.")
 
   cancellation_policy Cancellation?
-  payment_details PaymentDetails[]
-  invoice Invoice?
-
+  payment_details     PaymentDetails[]
+  invoice             Invoice?
 
   vendor_id String
   vendor    User   @relation(fields: [vendor_id], references: [id])
@@ -646,7 +672,6 @@ model PaymentStructure {
   updated_at DateTime @updatedAt
 }
 
-
 model PaymentSchedule {
   id String @id @default(uuid())
 
@@ -661,7 +686,6 @@ model PaymentSchedule {
   updated_at DateTime @updatedAt
 }
 
-
 model Invoice {
   id String @id @default(uuid())
 
@@ -672,8 +696,7 @@ model Invoice {
   client_email String
   client       Client @relation(fields: [client_email], references: [email])
 
-  
-  specification Specification?
+  specification   Specification?
   payment_details PaymentDetails?
 
   contract_id String?   @unique
@@ -682,9 +705,8 @@ model Invoice {
   vendor_id String?
   vendor    User?   @relation(fields: [vendor_id], references: [id])
 
-  token       String?   @unique @default(uuid())
-  invoice_link  String?   @unique @default(uuid())
-
+  token        String? @unique @default(uuid())
+  invoice_link String? @unique @default(uuid())
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -707,19 +729,18 @@ model PaymentDetails {
   updated_at DateTime @updatedAt
 }
 
-
 // ======== NOTIFICATIONS ========
 
 model Notification {
-  id      String   @id @default(uuid())
-  date    DateTime @default(now())
+  id      String           @id @default(uuid())
+  date    DateTime         @default(now())
   message String
   feature String
   type    NotificationType
   read    Boolean
 
   user_id String
-  user    User     @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -745,7 +766,6 @@ enum PROVIDER {
   linkedin
 }
 
-
 /// Payment structure types - lump_sum, per_specification
 enum PAYMENTSTRUCTURE {
   lump_sum
@@ -757,7 +777,6 @@ enum PAYMENTSTYLETYPE {
   lump_sum
   part_payment
 }
-
 
 /// Policy specifier types - client, vendor
 enum POLICYSPECIFIER {
@@ -829,6 +848,7 @@ enum SCHEDULETYPE {
 enum USERTYPE {
   host
   vendor
+  internal
 }
 
 enum ATTENDEETYPE {

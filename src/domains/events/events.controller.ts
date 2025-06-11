@@ -24,6 +24,8 @@ import {
 } from "@nestjs/swagger";
 import { Public } from "../../auth/decorator";
 import { SendEventLinkDto } from "./dto/event.dto";
+import { RequireOrganizationPermission } from "../roles-permissions/decorators";
+import { PERMISSION_TYPE } from "@prisma/client";
 
 @ApiTags("Events")
 @UseGuards(AuthGuard)
@@ -36,6 +38,7 @@ export class EventsController {
   @ApiResponse({ status: 400, description: "Invalid input data" })
   @ApiBearerAuth()
   @Post("create")
+  @RequireOrganizationPermission(PERMISSION_TYPE.event_create)
   create(@Body() dto: CreateEventDto, @CurrentUser() user: User) {
     return this.eventsService.create(dto, user);
   }

@@ -45,6 +45,13 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
+## Seed permission
+
+```bash
+$ npx ts-node scripts/seed-roles-permissions.ts
+
+```
+
 ## Test
 
 ```bash

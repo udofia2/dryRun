@@ -1,4 +1,3 @@
-// src/domains/roles-permissions/roles-permissions.service.ts
 import {
   Injectable,
   Logger,
@@ -8,7 +7,12 @@ import {
   UnauthorizedException
 } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
-import { User, PERMISSION_TYPE, SYSTEM_ROLE_TYPE, ORG_ROLE_TYPE } from "@prisma/client";
+import {
+  User,
+  PERMISSION_TYPE,
+  SYSTEM_ROLE_TYPE,
+  ORG_ROLE_TYPE
+} from "@prisma/client";
 import {
   CreateSystemRoleDto,
   UpdateSystemRoleDto,
@@ -53,10 +57,7 @@ export class RolesPermissionsService {
         where: {
           user_id: userId,
           is_active: true,
-          OR: [
-            { expires_at: null },
-            { expires_at: { gt: new Date() } }
-          ]
+          OR: [{ expires_at: null }, { expires_at: { gt: new Date() } }]
         },
         include: {
           system_role: {
@@ -71,14 +72,18 @@ export class RolesPermissionsService {
         }
       });
 
-      return userPermissions.some(userRole =>
-        userRole.system_role.permissions.some(rolePermission =>
-          rolePermission.system_permission.type === permissionType &&
-          rolePermission.system_permission.is_active
+      return userPermissions.some((userRole) =>
+        userRole.system_role.permissions.some(
+          (rolePermission) =>
+            rolePermission.system_permission.type === permissionType &&
+            rolePermission.system_permission.is_active
         )
       );
     } catch (error) {
-      this.logger.error(`Error checking system permission for user ${userId}:`, error);
+      this.logger.error(
+        `Error checking system permission for user ${userId}:`,
+        error
+      );
       return false;
     }
   }
@@ -127,14 +132,18 @@ export class RolesPermissionsService {
         return false;
       }
 
-      return collaboration.roles.some(userRole =>
-        userRole.org_role.permissions.some(rolePermission =>
-          rolePermission.org_permission.type === permissionType &&
-          rolePermission.org_permission.is_active
+      return collaboration.roles.some((userRole) =>
+        userRole.org_role.permissions.some(
+          (rolePermission) =>
+            rolePermission.org_permission.type === permissionType &&
+            rolePermission.org_permission.is_active
         )
       );
     } catch (error) {
-      this.logger.error(`Error checking organization permission for user ${userId}:`, error);
+      this.logger.error(
+        `Error checking organization permission for user ${userId}:`,
+        error
+      );
       return false;
     }
   }
@@ -143,7 +152,10 @@ export class RolesPermissionsService {
     userId: string,
     permissionType: PERMISSION_TYPE
   ): Promise<void> {
-    const hasPermission = await this.hasSystemPermission(userId, permissionType);
+    const hasPermission = await this.hasSystemPermission(
+      userId,
+      permissionType
+    );
     if (!hasPermission) {
       throw new ForbiddenException(
         `Insufficient permissions. Required: ${permissionType}`
@@ -170,7 +182,10 @@ export class RolesPermissionsService {
 
   // ======== SYSTEM ROLES MANAGEMENT ========
   async createSystemRole(dto: CreateSystemRoleDto, user: User) {
-    await this.requireSystemPermission(user.id, PERMISSION_TYPE.permission_grant);
+    await this.requireSystemPermission(
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
     return this.db.$transaction(async (tx) => {
       const role = await tx.systemRole.create({
@@ -183,7 +198,7 @@ export class RolesPermissionsService {
 
       if (dto.permission_ids && dto.permission_ids.length > 0) {
         await tx.systemRolePermission.createMany({
-          data: dto.permission_ids.map(permissionId => ({
+          data: dto.permission_ids.map((permissionId) => ({
             system_role_id: role.id,
             system_permission_id: permissionId
           }))
@@ -196,7 +211,10 @@ export class RolesPermissionsService {
   }
 
   async updateSystemRole(id: string, dto: UpdateSystemRoleDto, user: User) {
-    await this.requireSystemPermission(user.id, PERMISSION_TYPE.permission_grant);
+    await this.requireSystemPermission(
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
     return this.db.$transaction(async (tx) => {
       const role = await tx.systemRole.update({
@@ -217,7 +235,7 @@ export class RolesPermissionsService {
         // Add new permissions
         if (dto.permission_ids.length > 0) {
           await tx.systemRolePermission.createMany({
-            data: dto.permission_ids.map(permissionId => ({
+            data: dto.permission_ids.map((permissionId) => ({
               system_role_id: id,
               system_permission_id: permissionId
             }))
@@ -233,7 +251,10 @@ export class RolesPermissionsService {
   async getSystemRoles(query: QueryRolesDto) {
     const where: any = {};
 
-    if (query.type && Object.values(SYSTEM_ROLE_TYPE).includes(query.type as SYSTEM_ROLE_TYPE)) {
+    if (
+      query.type &&
+      Object.values(SYSTEM_ROLE_TYPE).includes(query.type as SYSTEM_ROLE_TYPE)
+    ) {
       where.type = query.type;
     }
 
@@ -243,8 +264,8 @@ export class RolesPermissionsService {
 
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } }
+        { name: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } }
       ];
     }
 
@@ -260,7 +281,7 @@ export class RolesPermissionsService {
           select: { user_roles: true }
         }
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" }
     });
   }
 
@@ -289,14 +310,17 @@ export class RolesPermissionsService {
     });
 
     if (!role) {
-      throw new NotFoundException('System role not found');
+      throw new NotFoundException("System role not found");
     }
 
     return role;
   }
 
   async deleteSystemRole(id: string, user: User) {
-    await this.requireSystemPermission(user.id, PERMISSION_TYPE.permission_grant);
+    await this.requireSystemPermission(
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
     const role = await this.db.systemRole.findUnique({
       where: { id },
@@ -304,24 +328,28 @@ export class RolesPermissionsService {
     });
 
     if (!role) {
-      throw new NotFoundException('System role not found');
+      throw new NotFoundException("System role not found");
     }
 
     if (role._count.user_roles > 0) {
       throw new BadRequestException(
-        'Cannot delete role that is assigned to users. Remove all users first.'
+        "Cannot delete role that is assigned to users. Remove all users first."
       );
     }
 
     await this.db.systemRole.delete({ where: { id } });
     this.logger.log(`System role deleted: ${role.name} by user ${user.id}`);
 
-    return { message: 'System role deleted successfully' };
+    return { message: "System role deleted successfully" };
   }
 
   // ======== ORGANIZATION ROLES MANAGEMENT ========
   async createOrganizationRole(dto: CreateOrganizationRoleDto, user: User) {
-    await this.requireOrganizationPermission(user.id, user.id, PERMISSION_TYPE.role_assign);
+    await this.requireOrganizationPermission(
+      user.id,
+      user.id,
+      PERMISSION_TYPE.role_assign
+    );
 
     return this.db.$transaction(async (tx) => {
       const role = await tx.organizationRole.create({
@@ -335,25 +363,31 @@ export class RolesPermissionsService {
 
       if (dto.permission_ids && dto.permission_ids.length > 0) {
         await tx.organizationRolePermission.createMany({
-          data: dto.permission_ids.map(permissionId => ({
+          data: dto.permission_ids.map((permissionId) => ({
             org_role_id: role.id,
             org_permission_id: permissionId
           }))
         });
       }
 
-      this.logger.log(`Organization role created: ${role.name} by user ${user.id}`);
+      this.logger.log(
+        `Organization role created: ${role.name} by user ${user.id}`
+      );
       return this.getOrganizationRoleById(role.id);
     });
   }
 
-  async updateOrganizationRole(id: string, dto: UpdateOrganizationRoleDto, user: User) {
+  async updateOrganizationRole(
+    id: string,
+    dto: UpdateOrganizationRoleDto,
+    user: User
+  ) {
     const role = await this.db.organizationRole.findUnique({
       where: { id }
     });
 
     if (!role) {
-      throw new NotFoundException('Organization role not found');
+      throw new NotFoundException("Organization role not found");
     }
 
     await this.requireOrganizationPermission(
@@ -379,7 +413,7 @@ export class RolesPermissionsService {
 
         if (dto.permission_ids.length > 0) {
           await tx.organizationRolePermission.createMany({
-            data: dto.permission_ids.map(permissionId => ({
+            data: dto.permission_ids.map((permissionId) => ({
               org_role_id: id,
               org_permission_id: permissionId
             }))
@@ -387,12 +421,18 @@ export class RolesPermissionsService {
         }
       }
 
-      this.logger.log(`Organization role updated: ${updatedRole.name} by user ${user.id}`);
+      this.logger.log(
+        `Organization role updated: ${updatedRole.name} by user ${user.id}`
+      );
       return this.getOrganizationRoleById(id);
     });
   }
 
-  async getOrganizationRoles(organizationId: string, query: QueryRolesDto, user: User) {
+  async getOrganizationRoles(
+    organizationId: string,
+    query: QueryRolesDto,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -403,7 +443,10 @@ export class RolesPermissionsService {
       organization_id: organizationId
     };
 
-    if (query.type && Object.values(ORG_ROLE_TYPE).includes(query.type as ORG_ROLE_TYPE)) {
+    if (
+      query.type &&
+      Object.values(ORG_ROLE_TYPE).includes(query.type as ORG_ROLE_TYPE)
+    ) {
       where.type = query.type;
     }
 
@@ -413,8 +456,8 @@ export class RolesPermissionsService {
 
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } }
+        { name: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } }
       ];
     }
 
@@ -430,7 +473,7 @@ export class RolesPermissionsService {
           select: { user_roles: true }
         }
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" }
     });
   }
 
@@ -463,7 +506,7 @@ export class RolesPermissionsService {
     });
 
     if (!role) {
-      throw new NotFoundException('Organization role not found');
+      throw new NotFoundException("Organization role not found");
     }
 
     return role;
@@ -488,9 +531,9 @@ export class RolesPermissionsService {
         collaborator = await tx.user.create({
           data: {
             email: dto.email,
-            firstname: dto.name.split(' ')[0] || dto.name,
-            lastname: dto.name.split(' ').slice(1).join(' ') || '',
-            type: 'host', // Default type
+            firstname: dto.name.split(" ")[0] || dto.name,
+            lastname: dto.name.split(" ").slice(1).join(" ") || "",
+            type: "host" // Default type
             // No password - will be set when they accept invitation
           }
         });
@@ -507,7 +550,7 @@ export class RolesPermissionsService {
       });
 
       if (existingCollaboration && existingCollaboration.is_active) {
-        throw new BadRequestException('User is already a collaborator');
+        throw new BadRequestException("User is already a collaborator");
       }
 
       // Create or update collaboration
@@ -519,7 +562,7 @@ export class RolesPermissionsService {
           }
         },
         update: {
-          status: 'pending',
+          status: "pending",
           invited_at: new Date(),
           expires_at: dto.expires_at ? new Date(dto.expires_at) : null,
           is_active: true
@@ -547,7 +590,7 @@ export class RolesPermissionsService {
       // Assign direct permissions if provided
       if (dto.permission_ids && dto.permission_ids.length > 0) {
         await tx.userPermission.createMany({
-          data: dto.permission_ids.map(permissionId => ({
+          data: dto.permission_ids.map((permissionId) => ({
             user_id: collaborator.id,
             org_permission_id: permissionId,
             organization_id: user.id,
@@ -574,10 +617,42 @@ export class RolesPermissionsService {
     });
 
     if (!collaboration) {
-      throw new NotFoundException('Collaboration not found');
+      throw new NotFoundException("Collaboration invitation not found");
     }
 
-    return collaboration;
+    if (collaboration.collaborator_id !== userId) {
+      throw new UnauthorizedException("Invalid collaboration invitation");
+    }
+
+    if (collaboration.expires_at && collaboration.expires_at < new Date()) {
+      throw new BadRequestException("Collaboration invitation has expired");
+    }
+
+    const updatedCollaboration = await this.db.collaboration.update({
+      where: { id: collaborationId },
+      data: {
+        status: "accepted",
+        accepted_at: new Date()
+      }
+    });
+
+    await this.notificationService.send({
+      userId: collaboration.organization_id,
+      userEmail:
+        (
+          await this.db.user.findUnique({
+            where: { id: collaboration.organization_id }
+          })
+        )?.email || "",
+      feature: NotificationFeature.USER_MANAGEMENT,
+      message: `${collaboration.email} has accepted your collaboration invitation`,
+      type: NOTIFICATIONTYPE.INFO
+    });
+
+    this.logger.log(
+      `Collaboration accepted: ${collaborationId} by user ${userId}`
+    );
+    return updatedCollaboration;
   }
 
   async updateCollaborator(id: string, dto: UpdateCollaboratorDto, user: User) {
@@ -586,7 +661,7 @@ export class RolesPermissionsService {
     });
 
     if (!collaboration) {
-      throw new NotFoundException('Collaboration not found');
+      throw new NotFoundException("Collaboration not found");
     }
 
     await this.requireOrganizationPermission(
@@ -634,7 +709,7 @@ export class RolesPermissionsService {
         // Assign new permissions
         if (dto.permission_ids.length > 0) {
           await tx.userPermission.createMany({
-            data: dto.permission_ids.map(permissionId => ({
+            data: dto.permission_ids.map((permissionId) => ({
               user_id: collaboration.collaborator_id,
               org_permission_id: permissionId,
               organization_id: collaboration.organization_id,
@@ -655,7 +730,7 @@ export class RolesPermissionsService {
     });
 
     if (!collaboration) {
-      throw new NotFoundException('Collaboration not found');
+      throw new NotFoundException("Collaboration not found");
     }
 
     await this.requireOrganizationPermission(
@@ -670,12 +745,15 @@ export class RolesPermissionsService {
     });
 
     this.logger.log(`Collaborator removed: ${id} by user ${user.id}`);
-    return { message: 'Collaborator removed successfully' };
+    return { message: "Collaborator removed successfully" };
   }
 
   // ======== PERMISSIONS MANAGEMENT ========
   async createSystemPermission(dto: CreateSystemPermissionDto, user: User) {
-    await this.requireSystemPermission(user.id, PERMISSION_TYPE.permission_grant);
+    await this.requireSystemPermission(
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
     const permission = await this.db.systemPermission.create({
       data: {
@@ -687,12 +765,21 @@ export class RolesPermissionsService {
       }
     });
 
-    this.logger.log(`System permission created: ${permission.name} by user ${user.id}`);
+    this.logger.log(
+      `System permission created: ${permission.name} by user ${user.id}`
+    );
     return permission;
   }
 
-  async updateSystemPermission(id: string, dto: UpdateSystemPermissionDto, user: User) {
-    await this.requireSystemPermission(user.id, PERMISSION_TYPE.permission_grant);
+  async updateSystemPermission(
+    id: string,
+    dto: UpdateSystemPermissionDto,
+    user: User
+  ) {
+    await this.requireSystemPermission(
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
     const permission = await this.db.systemPermission.update({
       where: { id },
@@ -705,7 +792,9 @@ export class RolesPermissionsService {
       }
     });
 
-    this.logger.log(`System permission updated: ${permission.name} by user ${user.id}`);
+    this.logger.log(
+      `System permission updated: ${permission.name} by user ${user.id}`
+    );
     return permission;
   }
 
@@ -717,7 +806,7 @@ export class RolesPermissionsService {
     }
 
     if (query.resource) {
-      where.resource = { contains: query.resource, mode: 'insensitive' };
+      where.resource = { contains: query.resource, mode: "insensitive" };
     }
 
     if (query.is_active !== undefined) {
@@ -726,36 +815,61 @@ export class RolesPermissionsService {
 
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } }
+        { name: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } }
       ];
     }
 
     return this.db.systemPermission.findMany({
       where,
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" }
     });
   }
 
-  async createOrganizationPermission(dto: CreateSystemPermissionDto, user: User) {
-    await this.requireOrganizationPermission(user.id, user.id, PERMISSION_TYPE.permission_grant);
+  async createOrganizationPermission(
+    dto: CreateSystemPermissionDto,
+    user: User
+  ) {
+    await this.requireOrganizationPermission(
+      user.id,
+      user.id,
+      PERMISSION_TYPE.permission_grant
+    );
 
-    const permission = await this.db.organizationPermission.create({
-      data: {
-        name: dto.name,
-        type: dto.type,
-        description: dto.description,
-        resource: dto.resource,
-        action: dto.action,
-        organization_id: user.id
+    try {
+      const permission = await this.db.organizationPermission.create({
+        data: {
+          name: dto.name,
+          type: dto.type,
+          description: dto.description,
+          resource: dto.resource,
+          action: dto.action,
+          organization_id: user.id
+        }
+      });
+
+      this.logger.log(
+        `Organization permission created: ${permission.name} by user ${user.id}`
+      );
+      return permission;
+    } catch (error: any) {
+      if (error.code === "P2002") {
+        this.logger.warn(
+          `Permission with name "${dto.name}" already exists for organization ${user.id}`
+        );
+        // Optionally return null or throw a custom error here
+        // throw new ConflictException(`Permission "${dto.name}" already exists.`);
+        return null;
       }
-    });
-
-    this.logger.log(`Organization permission created: ${permission.name} by user ${user.id}`);
-    return permission;
+      throw error;
+    }
   }
 
-  async getOrganizationPermissions(organizationId: string, query: QueryPermissionsDto, user: User) {
+  async getOrganizationPermissions(
+    organizationId: string,
+    query: QueryPermissionsDto,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -771,7 +885,7 @@ export class RolesPermissionsService {
     }
 
     if (query.resource) {
-      where.resource = { contains: query.resource, mode: 'insensitive' };
+      where.resource = { contains: query.resource, mode: "insensitive" };
     }
 
     if (query.is_active !== undefined) {
@@ -780,14 +894,14 @@ export class RolesPermissionsService {
 
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } }
+        { name: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } }
       ];
     }
 
     return this.db.organizationPermission.findMany({
       where,
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: "desc" }
     });
   }
 
@@ -805,7 +919,7 @@ export class RolesPermissionsService {
     });
 
     if (existingAssignment && existingAssignment.is_active) {
-      throw new BadRequestException('User already has this system role');
+      throw new BadRequestException("User already has this system role");
     }
 
     const assignment = await this.db.userSystemRole.upsert({
@@ -848,7 +962,9 @@ export class RolesPermissionsService {
       type: NOTIFICATIONTYPE.INFO
     });
 
-    this.logger.log(`System role assigned: ${dto.role_id} to user ${dto.user_id} by ${user.id}`);
+    this.logger.log(
+      `System role assigned: ${dto.role_id} to user ${dto.user_id} by ${user.id}`
+    );
     return assignment;
   }
 
@@ -871,7 +987,7 @@ export class RolesPermissionsService {
     });
 
     if (!assignment) {
-      throw new NotFoundException('Role assignment not found');
+      throw new NotFoundException("Role assignment not found");
     }
 
     await this.db.userSystemRole.update({
@@ -892,12 +1008,18 @@ export class RolesPermissionsService {
       type: NOTIFICATIONTYPE.WARNING
     });
 
-    this.logger.log(`System role revoked: ${dto.role_id} from user ${dto.user_id} by ${user.id}`);
-    return { message: 'System role revoked successfully' };
+    this.logger.log(
+      `System role revoked: ${dto.role_id} from user ${dto.user_id} by ${user.id}`
+    );
+    return { message: "System role revoked successfully" };
   }
 
   // ======== PERMISSION ASSIGNMENT ========
-  async assignPermission(dto: AssignPermissionDto, organizationId: string, user: User) {
+  async assignPermission(
+    dto: AssignPermissionDto,
+    organizationId: string,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -905,7 +1027,9 @@ export class RolesPermissionsService {
     );
 
     if (!dto.permission_id && !dto.org_permission_id) {
-      throw new BadRequestException('Either permission_id or org_permission_id must be provided');
+      throw new BadRequestException(
+        "Either permission_id or org_permission_id must be provided"
+      );
     }
 
     const permission = await this.db.userPermission.create({
@@ -931,7 +1055,8 @@ export class RolesPermissionsService {
       }
     });
 
-    const permissionName = permission.permission?.name || permission.org_permission?.name;
+    const permissionName =
+      permission.permission?.name || permission.org_permission?.name;
     await this.notificationService.send({
       userId: dto.user_id,
       userEmail: permission.user.email,
@@ -940,11 +1065,17 @@ export class RolesPermissionsService {
       type: NOTIFICATIONTYPE.INFO
     });
 
-    this.logger.log(`Permission assigned: ${permissionName} to user ${dto.user_id} by ${user.id}`);
+    this.logger.log(
+      `Permission assigned: ${permissionName} to user ${dto.user_id} by ${user.id}`
+    );
     return permission;
   }
 
-  async revokePermission(dto: RevokePermissionDto, organizationId: string, user: User) {
+  async revokePermission(
+    dto: RevokePermissionDto,
+    organizationId: string,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -974,7 +1105,7 @@ export class RolesPermissionsService {
     });
 
     if (!permission) {
-      throw new NotFoundException('Permission assignment not found');
+      throw new NotFoundException("Permission assignment not found");
     }
 
     await this.db.userPermission.update({
@@ -982,7 +1113,8 @@ export class RolesPermissionsService {
       data: { is_active: false }
     });
 
-    const permissionName = permission.permission?.name || permission.org_permission?.name;
+    const permissionName =
+      permission.permission?.name || permission.org_permission?.name;
     await this.notificationService.send({
       userId: dto.user_id,
       userEmail: permission.user.email,
@@ -991,8 +1123,10 @@ export class RolesPermissionsService {
       type: NOTIFICATIONTYPE.WARNING
     });
 
-    this.logger.log(`Permission revoked: ${permissionName} from user ${dto.user_id} by ${user.id}`);
-    return { message: 'Permission revoked successfully' };
+    this.logger.log(
+      `Permission revoked: ${permissionName} from user ${dto.user_id} by ${user.id}`
+    );
+    return { message: "Permission revoked successfully" };
   }
 
   // ======== BULK OPERATIONS ========
@@ -1013,19 +1147,27 @@ export class RolesPermissionsService {
           );
           assignments.push(assignment);
         } catch (error) {
-          this.logger.warn(`Failed to assign role ${roleId} to user ${userId}: ${error.message}`);
+          this.logger.warn(
+            `Failed to assign role ${roleId} to user ${userId}: ${error.message}`
+          );
         }
       }
     }
 
-    this.logger.log(`Bulk role assignment completed: ${assignments.length} assignments by ${user.id}`);
+    this.logger.log(
+      `Bulk role assignment completed: ${assignments.length} assignments by ${user.id}`
+    );
     return {
       message: `Successfully assigned ${assignments.length} roles`,
       assignments
     };
   }
 
-  async bulkAssignPermissions(dto: BulkAssignPermissionsDto, organizationId: string, user: User) {
+  async bulkAssignPermissions(
+    dto: BulkAssignPermissionsDto,
+    organizationId: string,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -1047,12 +1189,16 @@ export class RolesPermissionsService {
           );
           assignments.push(assignment);
         } catch (error) {
-          this.logger.warn(`Failed to assign permission ${permissionId} to user ${userId}: ${error.message}`);
+          this.logger.warn(
+            `Failed to assign permission ${permissionId} to user ${userId}: ${error.message}`
+          );
         }
       }
     }
 
-    this.logger.log(`Bulk permission assignment completed: ${assignments.length} assignments by ${user.id}`);
+    this.logger.log(
+      `Bulk permission assignment completed: ${assignments.length} assignments by ${user.id}`
+    );
     return {
       message: `Successfully assigned ${assignments.length} permissions`,
       assignments
@@ -1065,10 +1211,7 @@ export class RolesPermissionsService {
       where: {
         user_id: userId,
         is_active: true,
-        OR: [
-          { expires_at: null },
-          { expires_at: { gt: new Date() } }
-        ]
+        OR: [{ expires_at: null }, { expires_at: { gt: new Date() } }]
       },
       include: {
         system_role: {
@@ -1088,10 +1231,7 @@ export class RolesPermissionsService {
         user_id: userId,
         is_active: true,
         organization_id: organizationId,
-        OR: [
-          { expires_at: null },
-          { expires_at: { gt: new Date() } }
-        ]
+        OR: [{ expires_at: null }, { expires_at: { gt: new Date() } }]
       },
       include: {
         permission: true,
@@ -1099,38 +1239,43 @@ export class RolesPermissionsService {
       }
     });
 
-    const organizationRoles = organizationId ? await this.db.collaboration.findUnique({
-      where: {
-        collaborator_id_organization_id: {
-          collaborator_id: userId,
-          organization_id: organizationId
-        }
-      },
-      include: {
-        roles: {
+    const organizationRoles = organizationId
+      ? await this.db.collaboration.findUnique({
+          where: {
+            collaborator_id_organization_id: {
+              collaborator_id: userId,
+              organization_id: organizationId
+            }
+          },
           include: {
-            org_role: {
+            roles: {
               include: {
-                permissions: {
+                org_role: {
                   include: {
-                    org_permission: true
+                    permissions: {
+                      include: {
+                        org_permission: true
+                      }
+                    }
                   }
                 }
               }
             }
           }
-        }
-      }
-    }) : null;
+        })
+      : null;
 
     return {
-      system_permissions: systemPermissions.flatMap(role =>
-        role.system_role.permissions.map(p => p.system_permission)
+      system_permissions: systemPermissions.flatMap((role) =>
+        role.system_role.permissions.map((p) => p.system_permission)
       ),
-      direct_permissions: directPermissions.map(p => p.permission || p.org_permission),
-      organization_role_permissions: organizationRoles?.roles.flatMap(role =>
-        role.org_role.permissions.map(p => p.org_permission)
-      ) || []
+      direct_permissions: directPermissions.map(
+        (p) => p.permission || p.org_permission
+      ),
+      organization_role_permissions:
+        organizationRoles?.roles.flatMap((role) =>
+          role.org_role.permissions.map((p) => p.org_permission)
+        ) || []
     };
   }
 
@@ -1154,7 +1299,7 @@ export class RolesPermissionsService {
 
     await this.emailService.sendEmail(
       email,
-      'Collaboration Invitation',
+      "Collaboration Invitation",
       emailContent
     );
   }
@@ -1163,32 +1308,32 @@ export class RolesPermissionsService {
   async seedDefaultOrganizationPermissions(organizationId: string) {
     const defaultPermissions = [
       {
-        name: 'Event Sourcing',
+        name: "Event Sourcing",
         type: PERMISSION_TYPE.event_sourcing,
-        description: 'Access to event sourcing features',
-        resource: 'events',
-        action: 'source'
+        description: "Access to event sourcing features",
+        resource: "events",
+        action: "source"
       },
       {
-        name: 'Planner Access',
+        name: "Planner Access",
         type: PERMISSION_TYPE.planner,
-        description: 'Access to planning features',
-        resource: 'planning',
-        action: 'access'
+        description: "Access to planning features",
+        resource: "planning",
+        action: "access"
       },
       {
-        name: 'Backoffice Access',
+        name: "Backoffice Access",
         type: PERMISSION_TYPE.backoffice,
-        description: 'Access to backoffice features',
-        resource: 'backoffice',
-        action: 'access'
+        description: "Access to backoffice features",
+        resource: "backoffice",
+        action: "access"
       },
       {
-        name: 'CRM Access',
+        name: "CRM Access",
         type: PERMISSION_TYPE.crm,
-        description: 'Access to CRM features',
-        resource: 'crm',
-        action: 'access'
+        description: "Access to CRM features",
+        resource: "crm",
+        action: "access"
       }
     ];
 
@@ -1204,7 +1349,9 @@ export class RolesPermissionsService {
         createdPermissions.push(created);
       } catch (error) {
         // Permission might already exist
-        this.logger.warn(`Permission ${permission.name} already exists for organization ${organizationId}`);
+        this.logger.warn(
+          `Permission ${permission.name} already exists for organization ${organizationId}`
+        );
       }
     }
 
@@ -1216,28 +1363,39 @@ export class RolesPermissionsService {
       where: { organization_id: organizationId }
     });
 
+    const managerPerms: PERMISSION_TYPE[] = [
+      PERMISSION_TYPE.event_sourcing,
+      PERMISSION_TYPE.planner,
+      PERMISSION_TYPE.crm
+    ];
+
+    const memberPerms: PERMISSION_TYPE[] = [
+      PERMISSION_TYPE.event_sourcing,
+      PERMISSION_TYPE.planner
+    ];
+
     const defaultRoles = [
       {
-        name: 'Admin',
+        name: "Admin",
         type: ORG_ROLE_TYPE.admin,
-        description: 'Full access to all organization features',
-        permissions: permissions.map(p => p.id) // All permissions
+        description: "Full access to all organization features",
+        permissions: permissions.map((p) => p.id) // All permissions
       },
       {
-        name: 'Manager',
+        name: "Manager",
         type: ORG_ROLE_TYPE.manager,
-        description: 'Management access with limited administrative rights',
+        description: "Management access with limited administrative rights",
         permissions: permissions
-          .filter(p => [PERMISSION_TYPE.event_sourcing, PERMISSION_TYPE.planner, PERMISSION_TYPE.crm].includes(p.type))
-          .map(p => p.id)
+          .filter((p) => managerPerms.includes(p.type))
+          .map((p) => p.id)
       },
       {
-        name: 'Member',
+        name: "Member",
         type: ORG_ROLE_TYPE.member,
-        description: 'Basic access to organization features',
+        description: "Basic access to organization features",
         permissions: permissions
-          .filter(p => [PERMISSION_TYPE.event_sourcing, PERMISSION_TYPE.planner].includes(p.type))
-          .map(p => p.id)
+          .filter((p) => memberPerms.includes(p.type))
+          .map((p) => p.id)
       }
     ];
 
@@ -1256,7 +1414,7 @@ export class RolesPermissionsService {
 
           if (role.permissions.length > 0) {
             await tx.organizationRolePermission.createMany({
-              data: role.permissions.map(permissionId => ({
+              data: role.permissions.map((permissionId) => ({
                 org_role_id: createdRole.id,
                 org_permission_id: permissionId
               }))
@@ -1268,45 +1426,20 @@ export class RolesPermissionsService {
 
         createdRoles.push(created);
       } catch (error) {
-        this.logger.warn(`Role ${role.name} already exists for organization ${organizationId}`);
+        this.logger.warn(
+          `Role ${role.name} already exists for organization ${organizationId}`
+        );
       }
     }
 
     return createdRoles;
   }
-}
-      throw new NotFoundException('Collaboration invitation not found');
-    }
 
-    if (collaboration.collaborator_id !== userId) {
-      throw new UnauthorizedException('Invalid collaboration invitation');
-    }
-
-    if (collaboration.expires_at && collaboration.expires_at < new Date()) {
-      throw new BadRequestException('Collaboration invitation has expired');
-    }
-
-    const updatedCollaboration = await this.db.collaboration.update({
-      where: { id: collaborationId },
-      data: {
-        status: 'accepted',
-        accepted_at: new Date()
-      }
-    });
-
-    await this.notificationService.send({
-      userId: collaboration.organization_id,
-      userEmail: (await this.db.user.findUnique({ where: { id: collaboration.organization_id } }))?.email || '',
-      feature: NotificationFeature.USER_MANAGEMENT,
-      message: `${collaboration.email} has accepted your collaboration invitation`,
-      type: NOTIFICATIONTYPE.INFO
-    });
-
-    this.logger.log(`Collaboration accepted: ${collaborationId} by user ${userId}`);
-    return updatedCollaboration;
-  }
-
-  async getCollaborators(organizationId: string, query: QueryCollaboratorsDto, user: User) {
+  async getCollaborators(
+    organizationId: string,
+    query: QueryCollaboratorsDto,
+    user: User
+  ) {
     await this.requireOrganizationPermission(
       user.id,
       organizationId,
@@ -1327,12 +1460,12 @@ export class RolesPermissionsService {
 
     if (query.search) {
       where.OR = [
-        { email: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: "insensitive" } },
         {
           collaborator: {
             OR: [
-              { firstname: { contains: query.search, mode: 'insensitive' } },
-              { lastname: { contains: query.search, mode: 'insensitive' } }
+              { firstname: { contains: query.search, mode: "insensitive" } },
+              { lastname: { contains: query.search, mode: "insensitive" } }
             ]
           }
         }
@@ -1373,7 +1506,7 @@ export class RolesPermissionsService {
           }
         }
       },
-      orderBy: { invited_at: 'desc' }
+      orderBy: { invited_at: "desc" }
     });
   }
 
@@ -1415,3 +1548,9 @@ export class RolesPermissionsService {
     });
 
     if (!collaboration) {
+      throw new NotFoundException("Collaboration not found");
+    }
+
+    return collaboration;
+  }
+}

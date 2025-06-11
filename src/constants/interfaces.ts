@@ -88,6 +88,15 @@ export class EntryPass {
   stock_type: string;
 
   @ApiProperty({
+    description: "available number of entry passes",
+    required: false,
+    example: "300"
+  })
+  @IsNumber()
+  @IsOptional()
+  stock_available: number;
+
+  @ApiProperty({
     description: "Reservation limit for the entry pass",
     required: false,
     example: 100

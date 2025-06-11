@@ -38,7 +38,6 @@ import { RolesPermissionsGuard } from "./guards/roles-permissions.guard";
 })
 export class RolesPermissionsModule {}
 
-
 // Usage examples:
 /*
 @RequireSystemPermission(PERMISSION_TYPE.permission_grant)

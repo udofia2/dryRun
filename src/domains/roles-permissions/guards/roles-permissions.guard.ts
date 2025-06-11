@@ -1,34 +1,22 @@
-// src/domains/roles-permissions/guards/roles-permissions.guard.ts
 import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  ForbiddenException
+  ForbiddenException,
+  SetMetadata
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { RolesPermissionsService } from "../roles-permissions.service";
 import { PERMISSION_TYPE } from "@prisma/client";
 
-// Decorator for requiring system permissions
 export const RequireSystemPermission = (permission: PERMISSION_TYPE) =>
-  Reflector.createDecorator<PERMISSION_TYPE>({
-    key: "systemPermission",
-    value: permission
-  });
+  SetMetadata("systemPermission", permission);
 
-// Decorator for requiring organization permissions
 export const RequireOrganizationPermission = (permission: PERMISSION_TYPE) =>
-  Reflector.createDecorator<PERMISSION_TYPE>({
-    key: "orgPermission",
-    value: permission
-  });
+  SetMetadata("orgPermission", permission);
 
-// Decorator for requiring any of multiple permissions
 export const RequireAnyPermission = (permissions: PERMISSION_TYPE[]) =>
-  Reflector.createDecorator<PERMISSION_TYPE[]>({
-    key: "anyPermission",
-    value: permissions
-  });
+  SetMetadata("anyPermission", permissions);
 
 @Injectable()
 export class RolesPermissionsGuard implements CanActivate {

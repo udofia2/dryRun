@@ -115,7 +115,7 @@ export class CreateEventDto {
   @ApiProperty({
     description: "Type of location (e.g., virtual or physical)",
     required: false,
-    example: "In Person"
+    example: LOCATIONTYPE.in_person
   })
   @IsString()
   @IsEnum(LOCATIONTYPE)
@@ -256,15 +256,6 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   vendor_id: string;
-
-  @ApiProperty({
-    description: "available number of entry passes",
-    required: false,
-    example: "300"
-  })
-  @IsNumber()
-  @IsOptional()
-  stock_available: number;
 
   @ApiProperty({
     description: "Client email for event notifications",

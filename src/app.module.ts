@@ -16,6 +16,8 @@ import { PaymentsModule } from "./domains/payments/payments.module";
 import { EntryPassesModule } from "./domains/entry-passes/entry-passes.module";
 import { HealthModule } from "./health/health.module";
 import { ConfigModule } from "@nestjs/config";
+import { RolesPermissionsModule } from "./domains/roles-permissions/roles-permissions.module";
+import { OrganizationModule } from "./domains/organization/organization.module";
 // import * as redisStore from "cache-manager-redis-store";
 
 @Module({
@@ -42,7 +44,9 @@ import { ConfigModule } from "@nestjs/config";
     UsersModule,
     PaymentsModule,
     EntryPassesModule,
-    HealthModule
+    HealthModule,
+    RolesPermissionsModule,
+    OrganizationModule
   ],
   controllers: [AppController],
   providers: [AppService, ErrorService]
