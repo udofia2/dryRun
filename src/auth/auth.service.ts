@@ -22,10 +22,10 @@ import {
   REFRESH_TOKEN_SECRET
 } from "src/constants";
 import * as argon from "argon2";
-import { User } from "@prisma/client";
+import { PROVIDER, User } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { OtpService } from "src/provider/otp/otp.service";
-import { UsersService } from "src/users/users.service";
+import { UserResponse, UsersService } from "src/users/users.service";
 import { AuthResponse } from "src/common/types";
 import { Profile as FacebookUserProfile } from "passport-facebook";
 import { NotificationFeature } from "src/domains/notifications/dto/create-notification.dto";
@@ -104,12 +104,14 @@ export class AuthService {
    * @param {FacebookUserProfile} profile - The facebook profile information.
    * @returns {Promise<User>} - A promise that resolves to the newly created facebook user.
    */
-  public async createFacebookUser(profile: FacebookUserProfile): Promise<User> {
+  public async createFacebookUser(
+    profile: FacebookUserProfile
+  ): Promise<UserResponse> {
     const facebookUser: SocialAuthDto = {
       email: profile.emails[0].value,
       firstname: profile.name.givenName,
       lastname: profile.name.familyName,
-      provider: profile.provider,
+      provider: PROVIDER[profile.provider],
       providerId: profile.id,
       avatar: profile.photos[0]?.value
     };
@@ -122,7 +124,7 @@ export class AuthService {
    * @param profile
    * @returns {Promise<User>} - A promise that resolves to the newly created google user.
    */
-  public async createGoogleUser(profile: any): Promise<User> {
+  public async createGoogleUser(profile: any): Promise<UserResponse> {
     const googleUser: SocialAuthDto = {
       email: profile.email,
       firstname: profile.name.givenName,
@@ -173,7 +175,7 @@ export class AuthService {
   }
 
   private async signToken(
-    user: User
+    user: UserResponse
   ): Promise<{ access_token: string; refresh_token: string }> {
     const payload = {
       id: user.id,

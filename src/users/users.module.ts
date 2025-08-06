@@ -12,6 +12,8 @@ import { LocalPushProvider } from "src/provider/push/providers/local.provider";
 import { TwilioSmsProvider } from "src/provider/sms/providers/twilio.provider";
 import { AwsSnsProvider } from "src/provider/sms/providers/aws-sns.provider";
 import { LocalSmsProvider } from "src/provider/sms/providers/local.provider";
+import { RolesPermissionsService } from "src/domains/roles-permissions/roles-permissions.service";
+import { OrganizationService } from "src/domains/organization/organization.service";
 
 @Module({
   controllers: [UsersController],
@@ -27,7 +29,9 @@ import { LocalSmsProvider } from "src/provider/sms/providers/local.provider";
     LocalPushProvider,
     TwilioSmsProvider,
     AwsSnsProvider,
-    LocalSmsProvider
+    LocalSmsProvider,
+    RolesPermissionsService,
+    OrganizationService
   ],
   exports: [UsersService]
 })

@@ -148,7 +148,7 @@ model OrganizationRole {
   is_active       Boolean       @default(true)
 
   // Relations
-  organization User                         @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization Organization                 @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
   permissions  OrganizationRolePermission[]
   user_roles   UserOrganizationRole[]
 

@@ -1,9 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { PROVIDER } from "@prisma/client";
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class SocialAuthDto {
-  @IsString()
-  provider: string;
+  @IsEnum(PROVIDER, {
+    message: `Provider must be one of: ${Object.values(PROVIDER).join(", ")}`
+  })
+  @IsNotEmpty({ message: "Provider is required" })
+  provider: PROVIDER;
 
   @IsString()
   providerId: string;

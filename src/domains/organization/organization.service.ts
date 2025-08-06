@@ -8,7 +8,7 @@ import {
 import { DatabaseService } from "src/database/database.service";
 import { CreateOrganizationDto } from "./dto/create-organization.dto";
 import { UpdateOrganizationDto } from "./dto/update-organization.dto";
-import { Organization } from "@prisma/client";
+import { Organization, Prisma } from "@prisma/client";
 
 @Injectable()
 export class OrganizationService {
@@ -21,11 +21,18 @@ export class OrganizationService {
    * @param dto - DTO with organization creation data
    * @returns Created organization
    */
-  async createOrganization(dto: CreateOrganizationDto): Promise<Organization> {
+  async createOrganization(
+    dto: CreateOrganizationDto,
+    tx?: Prisma.TransactionClient
+  ): Promise<Organization> {
+    const db = tx || this.db;
     try {
-      const existingOrg = await this.db.organization.findFirst({
+      const existingOrg = await db.organization.findFirst({
         where: {
-          name: dto.name,
+          name: {
+            equals: dto.name,
+            mode: "insensitive"
+          },
           ownerId: dto.ownerId
         }
       });
@@ -36,7 +43,7 @@ export class OrganizationService {
         );
       }
 
-      const organization = await this.db.organization.create({
+      const organization = await db.organization.create({
         data: {
           name: dto.name,
           ownerId: dto.ownerId

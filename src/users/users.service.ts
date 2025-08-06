@@ -5,7 +5,15 @@ import {
   Logger
 } from "@nestjs/common";
 import { UpdateUserDto } from "./dtos/update-user.dto";
-import { EXHIBITTYPE, User, USERTYPE } from "@prisma/client";
+import {
+  EXHIBITTYPE,
+  ORG_ROLE_TYPE,
+  Prisma,
+  PROVIDER,
+  SYSTEM_ROLE_TYPE,
+  User,
+  USERTYPE
+} from "@prisma/client";
 import { DatabaseService } from "src/database/database.service";
 import { SocialAuthDto } from "src/auth/dto";
 import { CreateUserDto } from "./dtos";
@@ -15,8 +23,10 @@ import { NotificationFeature } from "src/domains/notifications/dto/create-notifi
 import * as argon from "argon2";
 import { ExhibitType } from "src/constants";
 import { NOTIFICATIONTYPE } from "src/domains/notifications/dto/send-notification.dto";
+import { RolesPermissionsService } from "src/domains/roles-permissions/roles-permissions.service";
+import { OrganizationService } from "src/domains/organization/organization.service";
 
-interface UserResponse {
+export interface UserResponse {
   id: string;
   email: string;
   firstname: string;
@@ -32,6 +42,11 @@ interface UserResponse {
   updated_at: Date;
   deleted?: boolean;
   deleted_at?: Date;
+  organization?: {
+    id: string;
+    name: string;
+    isOwner: boolean;
+  };
 }
 
 @Injectable()
@@ -40,7 +55,9 @@ export class UsersService {
 
   constructor(
     private db: DatabaseService,
-    private readonly notificationsService: NotificationsService
+    private readonly notificationsService: NotificationsService,
+    private readonly rolesPermissionsService: RolesPermissionsService,
+    private readonly organizationsService: OrganizationService
   ) {}
 
   /**
@@ -49,7 +66,9 @@ export class UsersService {
    * @returns {Promise<User>} - the newly created user
    * @throws Prisma errors are caught and re-thrown for global error filter
    */
-  public async create(dto: CreateUserDto | SocialAuthDto): Promise<User> {
+  public async create(
+    dto: CreateUserDto | SocialAuthDto
+  ): Promise<UserResponse> {
     try {
       this.logger.log(`Attempting to create user with email: ${dto.email}`);
 
@@ -73,26 +92,83 @@ export class UsersService {
 
       dto.password = await argon.hash(dto.password);
 
-      const user: User = await this.db.user.create({
-        data: { ...dto, provider: "local" }
-      });
+      // const user: User = await this.db.user.create({
+      //   data: { ...dto, provider: "local" }
+      // });
+
+      // Extract organization name from email
+      const organizationName = this.extractOrganizationName(dto.email);
+
+      const result = await this.db.$transaction(
+        async (tx) => {
+          // 1. Create the user first
+          const user: User = await tx.user.create({
+            data: {
+              ...dto,
+              provider: "provider" in dto ? dto.provider : PROVIDER.local
+            }
+          });
+
+          // Find or create organization
+          const organization =
+            await this.organizationsService.createOrganization(
+              {
+                name: organizationName,
+                ownerId: user.id
+              },
+              tx
+            );
+
+          //Assign system roles based on user type
+          await this.assignSystemRoles(user, tx);
+
+          //Assign organization roles
+          const isOwner = await this.assignOrganizationRoles(
+            tx,
+            user,
+            organization.id,
+            organization.ownerId === user.id
+          );
+
+          // Setup default permissions if first user in organization
+          if (organization.ownerId === user.id) {
+            await this.setupDefaultOrganizationStructure(tx, user.id);
+          }
+
+          return {
+            user,
+            organization: {
+              id: organization.id,
+              name: organization.name,
+              isOwner: organization.ownerId === user.id
+            }
+          };
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+          timeout: 10000
+        }
+      );
 
       await this.notificationsService.send({
-        userId: user.id,
-        userEmail: user.email,
-        userPhone: user.phone,
+        userId: result.user.id,
+        userEmail: result.user.email,
+        userPhone: result.user.phone,
         feature: NotificationFeature.USER_MANAGEMENT,
-        message: `Welcome to our platform, ${user.firstname}! Your account has been successfully created.`,
+        message: `Welcome to our platform, ${result.user.firstname}! Your account has been successfully created.`,
         type: NOTIFICATIONTYPE.INFO
       });
 
       this.logger.log(
-        `Successfully created user with ID: ${user.id}, email: ${user.email}`
+        `Successfully created user with ID: ${result.user.id}, email: ${result.user.email}`
       );
 
-      delete user.password;
+      delete result.user.password;
 
-      return user;
+      return {
+        ...result.user,
+        organization: result.organization
+      };
     } catch (error) {
       this.logger.error(
         `Failed to create user with email: ${dto.email}`,
@@ -433,6 +509,170 @@ export class UsersService {
         error instanceof Error ? error.stack : "Unknown error"
       );
       throw error;
+    }
+  }
+
+  /**
+   * Extract organization name from email
+   * @param email - User's email address
+   * @returns Organization name
+   */
+  private extractOrganizationName(email: string): string {
+    const domain = email.split("@")[1];
+    const orgName = domain.split(".")[0];
+
+    // Capitalize first letter and clean up
+    return orgName.charAt(0).toUpperCase() + orgName.slice(1).toLowerCase();
+  }
+
+  /**
+   * Assign system roles based on user type
+   * @param tx - Database transaction
+   * @param user - User object
+   */
+  private async assignSystemRoles(user: User, tx: any): Promise<void> {
+    try {
+      // Define system role mappings based on user type
+      const systemRoleMapping: Record<USERTYPE, SYSTEM_ROLE_TYPE | null> = {
+        [USERTYPE.host]: null, // No system role for regular hosts
+        [USERTYPE.vendor]: null, // No system role for regular vendors
+        [USERTYPE.internal]: SYSTEM_ROLE_TYPE.support // Internal users get support role
+      };
+
+      const systemRole = systemRoleMapping[user.type];
+
+      if (systemRole) {
+        // Find the system role
+        const role = await tx.systemRole.findUnique({
+          where: { type: systemRole }
+        });
+
+        if (role) {
+          await tx.userSystemRole.create({
+            data: {
+              user_id: user.id,
+              system_role_id: role.id,
+              assigned_by: user.id // Self-assigned during registration
+            }
+          });
+
+          this.logger.log(
+            `Assigned system role ${systemRole} to user ${user.id}`
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to assign system roles to user ${user.id}:`,
+        error
+      );
+      // Don't throw - system roles are not critical for user creation
+    }
+  }
+
+  /**
+   * Assign organization roles
+   * @param tx - Database transaction
+   * @param user - User object
+   * @param organizationId - Organization ID
+   * @param isOwner - Whether user is organization owner
+   * @returns Whether user is owner
+   */
+  private async assignOrganizationRoles(
+    tx: any,
+    user: User,
+    organizationId: string,
+    isOwner: boolean
+  ): Promise<boolean> {
+    try {
+      // If user is organization owner, they get full admin rights automatically
+      if (isOwner) {
+        this.logger.log(
+          `User ${user.id} is organization owner, skipping role assignment`
+        );
+        return true;
+      }
+
+      // For non-owners, create collaboration and assign role based on user type
+      const collaboration = await tx.collaboration.create({
+        data: {
+          collaborator_id: user.id,
+          organization_id: organizationId,
+          email: user.email,
+          invited_by: organizationId, // Organization owner invited them
+          status: "accepted", // Auto-accept since they're registering
+          accepted_at: new Date()
+        }
+      });
+
+      // Determine role based on user type
+      const orgRoleMapping: Record<USERTYPE, ORG_ROLE_TYPE> = {
+        [USERTYPE.host]: ORG_ROLE_TYPE.member,
+        [USERTYPE.vendor]: ORG_ROLE_TYPE.member,
+        [USERTYPE.internal]: ORG_ROLE_TYPE.admin
+      };
+
+      const roleType = orgRoleMapping[user.type];
+
+      // Find the organization role
+      const orgRole = await tx.organizationRole.findFirst({
+        where: {
+          organization_id: organizationId,
+          type: roleType
+        }
+      });
+
+      if (orgRole) {
+        await tx.userOrganizationRole.create({
+          data: {
+            collaboration_id: collaboration.id,
+            org_role_id: orgRole.id,
+            assigned_by: organizationId // Assigned by organization owner
+          }
+        });
+
+        this.logger.log(
+          `Assigned organization role ${roleType} to user ${user.id}`
+        );
+      }
+
+      return false;
+    } catch (error) {
+      this.logger.error(
+        `Failed to assign organization roles to user ${user.id}:`,
+        error
+      );
+      return isOwner;
+    }
+  }
+
+  /**
+   * Setup default organization structure for new organization owners
+   * @param tx - Database transaction
+   * @param userId - User ID of organization owner
+   */
+  private async setupDefaultOrganizationStructure(
+    tx: any,
+    userId: string
+  ): Promise<void> {
+    try {
+      // Create default organization permissions
+      await this.rolesPermissionsService.seedDefaultOrganizationPermissions(
+        userId
+      );
+
+      // Create default organization roles
+      await this.rolesPermissionsService.seedDefaultOrganizationRoles(userId);
+
+      this.logger.log(
+        `Setup default organization structure for user ${userId}`
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to setup organization structure for user ${userId}:`,
+        error
+      );
+      // Don't throw - this is not critical for user creation
     }
   }
 }
