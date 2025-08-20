@@ -148,7 +148,7 @@ model OrganizationRole {
   is_active       Boolean       @default(true)
 
   // Relations
-  organization Organization                 @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization User                         @relation("OrganizationRoles", fields: [organization_id], references: [id], onDelete: Cascade)
   permissions  OrganizationRolePermission[]
   user_roles   UserOrganizationRole[]
 
@@ -313,12 +313,12 @@ model User {
   ownedOrganizations Organization[] @relation("UserOwnedOrganizations")
   memberships        Member[]       @relation("UserMemberships")
 
-  organization_roles          OrganizationRole[]       @relation("OrganizationRoles")
-  organization_permissions    OrganizationPermission[] @relation("OrganizationPermissions")
-  collaborations              Collaboration[]          @relation("Collaborations")
-  organization_collaborations Collaboration[]          @relation("OrganizationCollaborations")
-  invited_collaborations      Collaboration[]          @relation("InvitedCollaborations")
-  assigned_org_roles          UserOrganizationRole[]   @relation("AssignedOrgRoles")
+  // organization_roles          OrganizationRole[]       @relation("OrganizationRoles")
+  // organization_permissions    OrganizationPermission[] @relation("OrganizationPermissions")
+  collaborations              Collaboration[]        @relation("Collaborations")
+  organization_collaborations Collaboration[]        @relation("OrganizationCollaborations")
+  invited_collaborations      Collaboration[]        @relation("InvitedCollaborations")
+  assigned_org_roles          UserOrganizationRole[] @relation("AssignedOrgRoles")
 
   // Permission relations
   direct_permissions            UserPermission[] @relation("UserDirectPermissions")
@@ -329,7 +329,9 @@ model User {
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
-  deleted Boolean @default(false)
+  deleted                Boolean                  @default(false)
+  organizationRole       OrganizationRole[]       @relation("OrganizationRoles")
+  organizationPermission OrganizationPermission[] @relation("OrganizationPermissions")
 
   @@index([email])
 }
